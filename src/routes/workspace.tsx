@@ -1079,26 +1079,11 @@ function WorkspacePage() {
             </button>
           )}
 
-          {!searchOpen && (
-            <button
-              type="button"
-              className="ws-search-toggle"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Öppna sök"
-              title="Sök i workspace"
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
-              </svg>
-            </button>
-          )}
-
-          {searchOpen && (() => {
+          {(() => {
             const q = searchQuery.trim().toLowerCase();
             type Hit = { id: string; title: string; snippet: string; kind: string; target: { itemId?: string; section?: SectionId } };
             const hits: Hit[] = [];
-            if (q) {
+            if (q && searchOpen) {
               const snippet = (s: string) => {
                 const i = s.toLowerCase().indexOf(q);
                 if (i < 0) return s.slice(0, 80);
@@ -1139,43 +1124,51 @@ function WorkspacePage() {
               setSelected([id]);
             };
             return (
-              <div className="ws-search" role="dialog" aria-label="Sök">
-                <div className="ws-search-head">
-                  <div>
-                    <div className="ws-chat-label">SÖK</div>
-                    <h3 className="ws-chat-title">Hitta i workspace</h3>
-                  </div>
-                  <button type="button" className="ws-chat-close" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} aria-label="Stäng sök">×</button>
-                </div>
-                <div className="ws-search-field">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <div className={`ws-search-bar ${searchOpen ? "is-open" : ""}`}>
+                {searchOpen && (
                   <input
                     autoFocus
                     type="text"
-                    placeholder="Sök ord eller innehåll…"
+                    className="ws-search-input"
+                    placeholder="Sök i workspace…"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); } }}
                   />
-                </div>
-                <div className="ws-search-results">
-                  {!q && <div className="ws-search-empty">Skriv för att söka i moduler, notiser, texter och anteckningar.</div>}
-                  {q && hits.length === 0 && <div className="ws-search-empty">Inga träffar för "{searchQuery}".</div>}
-                  {hits.map(h => (
-                    <button
-                      key={h.id}
-                      type="button"
-                      className="ws-search-hit"
-                      onClick={() => {
-                        if (h.target.itemId) focusItem(h.target.itemId);
-                        else if (h.target.section) { setActive(h.target.section); setShowNotes(true); }
-                      }}
-                    >
-                      <span className="ws-search-kind">{h.kind}</span>
-                      <span className="ws-search-title">{h.title}</span>
-                      <span className="ws-search-snippet">{h.snippet}</span>
-                    </button>
-                  ))}
-                </div>
+                )}
+                <button
+                  type="button"
+                  className="ws-search-icon"
+                  onClick={() => { if (searchOpen) { setSearchOpen(false); setSearchQuery(""); } else setSearchOpen(true); }}
+                  aria-label={searchOpen ? "Stäng sök" : "Öppna sök"}
+                  title={searchOpen ? "Stäng sök" : "Sök i workspace"}
+                >
+                  {searchOpen ? (
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                  )}
+                </button>
+                {searchOpen && q && (
+                  <div className="ws-search-dropdown">
+                    {hits.length === 0 && <div className="ws-search-empty">Inga träffar för "{searchQuery}".</div>}
+                    {hits.map(h => (
+                      <button
+                        key={h.id}
+                        type="button"
+                        className="ws-search-hit"
+                        onClick={() => {
+                          if (h.target.itemId) focusItem(h.target.itemId);
+                          else if (h.target.section) { setActive(h.target.section); setShowNotes(true); }
+                        }}
+                      >
+                        <span className="ws-search-kind">{h.kind}</span>
+                        <span className="ws-search-title">{h.title}</span>
+                        <span className="ws-search-snippet">{h.snippet}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })()}
