@@ -220,6 +220,7 @@ function WorkspacePage() {
   const [sideCollapsed, setSideCollapsed] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [pdfOpenId, setPdfOpenId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
@@ -692,11 +693,26 @@ function WorkspacePage() {
                           <div className="ws-pdf-head">
                             <span className="ws-pdf-tag">PDF</span>
                             <span className="ws-pdf-name" title={it.name}>{it.name}</span>
-                            <a className="ws-pdf-open" href={it.dataUrl} target="_blank" rel="noreferrer" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>Öppna</a>
+                            <button
+                              type="button"
+                              className="ws-pdf-open"
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); setPdfOpenId(it.id); }}
+                            >Öppna</button>
                           </div>
-                          <object className="ws-pdf-frame" data={it.dataUrl} type="application/pdf" aria-label={it.name}>
-                            <div className="ws-pdf-fallback">Förhandsvisning ej tillgänglig</div>
-                          </object>
+                          <button
+                            type="button"
+                            className="ws-pdf-preview"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); setPdfOpenId(it.id); }}
+                            aria-label={`Öppna ${it.name}`}
+                          >
+                            <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                              <path d="M14 3v6h6"/>
+                            </svg>
+                            <span className="ws-pdf-preview-cta">Visa PDF</span>
+                          </button>
                         </>
                       ) : (
                         <label className="ws-pdf-drop" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
@@ -831,6 +847,33 @@ function WorkspacePage() {
             moduleId={activeModule}
             moduleLabel={activeModule ? (MODULES.find(m => m.id === activeModule)?.label ?? null) : null}
           />
+
+          {(() => {
+            const openPdf = pdfOpenId ? items.find(i => i.id === pdfOpenId && i.type === "pdf") as PdfItem | undefined : undefined;
+            return (
+              <div className={`ws-pdf-viewer ${openPdf && openPdf.dataUrl ? "is-open" : ""}`} role="dialog" aria-label="PDF-läsare">
+                {openPdf && openPdf.dataUrl && (
+                  <>
+                    <div className="ws-pdf-viewer-head">
+                      <div>
+                        <div className="ws-pdf-viewer-label">PDF</div>
+                        <h3 className="ws-pdf-viewer-title" title={openPdf.name}>{openPdf.name}</h3>
+                      </div>
+                      <div className="ws-pdf-viewer-actions">
+                        <a className="ws-pdf-viewer-link" href={openPdf.dataUrl} target="_blank" rel="noreferrer">Ny flik</a>
+                        <button type="button" className="ws-chat-close" onClick={() => setPdfOpenId(null)} aria-label="Stäng PDF">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                    <object className="ws-pdf-viewer-frame" data={openPdf.dataUrl} type="application/pdf" aria-label={openPdf.name}>
+                      <div className="ws-pdf-fallback">Förhandsvisning ej tillgänglig</div>
+                    </object>
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </section>
       </div>
     </main>
@@ -1434,7 +1477,14 @@ const css = `
 }
 .ws-pdf-name { flex: 1; min-width: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-pdf-open { font-family: 'Space Mono', monospace; font-size: 11px; color: inherit; text-decoration: underline; cursor: pointer; }
-.ws-pdf-frame { flex: 1; width: 100%; min-height: 0; border: 1.5px solid var(--ink); border-radius: 8px; background: #efece2; }
+.ws-pdf-preview {
+  flex: 1; width: 100%; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border: 1.5px solid var(--ink); border-radius: 8px; background: #efece2;
+  color: var(--ink); cursor: pointer;
+}
+.ws-pdf-preview:hover { background: #e6e2d3; }
+.ws-pdf-preview-cta { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; }
 .ws-pdf-fallback { display: grid; place-items: center; width: 100%; height: 100%; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink); opacity: 0.6; }
 .ws-pdf-drop {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
@@ -1445,4 +1495,32 @@ const css = `
 .ws-pdf-cta { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.04em; }
 .ws-pdf-hint { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; opacity: 0.65; text-transform: uppercase; }
 .ws-pdf-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+
+.ws-pdf-viewer {
+  position: absolute; top: 48px; right: 24px; bottom: 48px; left: 24px;
+  background: var(--cream);
+  border: 2px solid var(--ink); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  display: flex; flex-direction: column;
+  z-index: 7;
+  transform: translateY(20px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s ease, opacity 0.18s ease;
+}
+.ws-pdf-viewer.is-open { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+.ws-pdf-viewer-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; border-bottom: 2px solid var(--ink);
+}
+.ws-pdf-viewer-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.22em; color: var(--coral); }
+.ws-pdf-viewer-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; line-height: 1; margin: 4px 0 0; letter-spacing: 0.02em; max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-pdf-viewer-actions { display: flex; align-items: center; gap: 10px; }
+.ws-pdf-viewer-link {
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 6px 10px; border: 1.5px solid var(--ink); border-radius: 10px;
+  color: var(--ink); text-decoration: none; background: var(--cream); box-shadow: 2px 2px 0 var(--ink);
+}
+.ws-pdf-viewer-link:hover { background: var(--ink); color: var(--cream); }
+.ws-pdf-viewer-frame { flex: 1; width: 100%; min-height: 0; border: 0; background: #efece2; border-radius: 0 0 12px 12px; }
 `;
