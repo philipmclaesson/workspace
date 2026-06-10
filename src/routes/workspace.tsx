@@ -738,12 +738,16 @@ const css = `
   border-bottom: 2px solid var(--ink);
 }
 .ws-logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(30px, 4vw, 46px);
-  letter-spacing: 0.04em;
-  color: var(--green);
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  text-shadow: 2px 2px 0 rgba(26,26,26,0.12);
+  line-height: 0;
+  padding-bottom: 12px;
+}
+.ws-logo-img {
+  height: clamp(26px, 3.2vw, 38px);
+  width: auto;
+  display: block;
 }
 .ws-nav { display: flex; gap: clamp(14px, 2vw, 24px); align-items: center; }
 .ws-nav a {
