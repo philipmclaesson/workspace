@@ -715,7 +715,7 @@ const css = `
   --cream: #f5f1e8;
   --ink: #1a1a1a;
   --coral: #cc3a1e;
-  --green: #226633;
+  --green: #4ec07a;
   --teal: #3f8f81;
   --blue: #2255cc;
   --lilac: #b6a8e8;
