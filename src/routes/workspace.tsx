@@ -343,6 +343,7 @@ function WorkspacePage() {
 
   const TEMPLATES = [
     { id: "profile", label: "Profil", hint: "PR", insert: insertProfileTemplate },
+    { id: "brain", label: "Hjärna", hint: "BR", insert: insertBrainTemplate },
   ];
 
   const TOOLS = [
