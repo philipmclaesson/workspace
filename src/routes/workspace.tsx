@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/workspace")({
   head: () => ({
@@ -23,13 +23,115 @@ const SECTIONS: { id: SectionId; label: string; hint: string }[] = [
   { id: "questions", label: "Frågor", hint: "06" },
 ];
 
+type WsNode = {
+  id: string;
+  x: number;
+  y: number;
+  kind: string;
+  title: string;
+  body: string;
+  variant: "a" | "b" | "c" | "d" | "e";
+};
+
+const INITIAL_NODES: WsNode[] = [
+  { id: "n1", x: 80, y: 120, kind: "NEURON", title: "Aktionspotential", body: "Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV.", variant: "a" },
+  { id: "n2", x: 480, y: 280, kind: "SYSTEM", title: "Limbiska systemet", body: "Amygdala, hippocampus, hypothalamus.", variant: "b" },
+  { id: "n3", x: 880, y: 100, kind: "TRANSMITTOR", title: "Dopamin", body: "Belöning, motivation, motorik.", variant: "c" },
+  { id: "n4", x: 140, y: 480, kind: "ANTECKNING", title: "Synaps", body: "Pre → klyfta → post. Vesiklar släpper signalsubstans.", variant: "d" },
+  { id: "n5", x: 820, y: 460, kind: "FRÅGA", title: "Plasticitet?", body: "Hur formar LTP långtidsminnet i hippocampus?", variant: "e" },
+];
+
 function WorkspacePage() {
   const [active, setActive] = useState<SectionId>("overview");
   const [zoom, setZoom] = useState(100);
   const [tool, setTool] = useState<string>("select");
-  const zoomIn = () => setZoom((z) => Math.min(200, z + 10));
-  const zoomOut = () => setZoom((z) => Math.max(30, z - 10));
-  const zoomFit = () => setZoom(100);
+  const [pan, setPan] = useState({ x: 40, y: 40 });
+  const [nodes, setNodes] = useState<WsNode[]>(INITIAL_NODES);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<
+    | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
+    | { type: "node"; startX: number; startY: number; nodeId: string; origNode: { x: number; y: number }; scale: number }
+    | null
+  >(null);
+  const scale = zoom / 100;
+  const clampZoom = (z: number) => Math.max(25, Math.min(250, z));
+  const zoomIn = () => setZoom((z) => clampZoom(z + 10));
+  const zoomOut = () => setZoom((z) => clampZoom(z - 10));
+  const zoomFit = () => { setZoom(100); setPan({ x: 40, y: 40 }); };
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (d.type === "pan") {
+        setPan({ x: d.origPan.x + dx, y: d.origPan.y + dy });
+      } else {
+        const id = d.nodeId;
+        const s = d.scale;
+        setNodes((ns) => ns.map((n) => n.id === id ? { ...n, x: d.origNode.x + dx / s, y: d.origNode.y + dy / s } : n));
+      }
+    };
+    const onUp = () => { dragRef.current = null; document.body.style.cursor = ""; };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const onCanvasMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    if (tool === "node") {
+      const rect = viewportRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const x = (e.clientX - rect.left - pan.x) / scale - 110;
+      const y = (e.clientY - rect.top - pan.y) / scale - 30;
+      const id = `n${Date.now()}`;
+      setNodes((ns) => [...ns, { id, x, y, kind: "NY NOD", title: "Ny nod", body: "Dubbelklicka för att redigera.", variant: "d" }]);
+      setTool("select");
+      return;
+    }
+    dragRef.current = { type: "pan", startX: e.clientX, startY: e.clientY, origPan: { ...pan } };
+    document.body.style.cursor = "grabbing";
+  };
+
+  const onNodeMouseDown = (e: React.MouseEvent, id: string) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    const n = nodes.find((n) => n.id === id);
+    if (!n) return;
+    dragRef.current = { type: "node", startX: e.clientX, startY: e.clientY, nodeId: id, origNode: { x: n.x, y: n.y }, scale };
+    document.body.style.cursor = "grabbing";
+  };
+
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const factor = e.deltaY > 0 ? 0.92 : 1.08;
+      setZoom((z) => {
+        const next = clampZoom(z * factor);
+        const oldScale = z / 100;
+        const newScale = next / 100;
+        setPan((p) => ({
+          x: mx - ((mx - p.x) / oldScale) * newScale,
+          y: my - ((my - p.y) / oldScale) * newScale,
+        }));
+        return next;
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+
   const TOOLS: { id: string; label: string; icon: React.ReactNode }[] = [
     { id: "select", label: "Välj", icon: (
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>
@@ -92,7 +194,46 @@ function WorkspacePage() {
         </aside>
 
         <section className="ws-canvas">
-          <div className="ws-grid" aria-hidden="true" />
+          <div
+            ref={viewportRef}
+            className={`ws-viewport ${tool === "node" ? "is-adding" : ""}`}
+            onMouseDown={onCanvasMouseDown}
+          >
+            <div
+              className="ws-grid"
+              aria-hidden="true"
+              style={{
+                backgroundSize: `${22 * scale}px ${22 * scale}px`,
+                backgroundPosition: `${pan.x}px ${pan.y}px`,
+              }}
+            />
+            <div
+              className="ws-world"
+              style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}
+            >
+              <svg className="ws-edges" aria-hidden="true" width="2000" height="1400">
+                {nodes.length >= 2 && nodes.slice(1).map((n, i) => {
+                  const a = nodes[0];
+                  const ax = a.x + 110, ay = a.y + 40;
+                  const bx = n.x + 110, by = n.y + 40;
+                  const cx = (ax + bx) / 2;
+                  return <path key={`e-${n.id}-${i}`} d={`M ${ax} ${ay} C ${cx} ${ay}, ${cx} ${by}, ${bx} ${by}`} className="ws-edge" />;
+                })}
+              </svg>
+              {nodes.map((n) => (
+                <article
+                  key={n.id}
+                  className={`ws-node ws-node-${n.variant}`}
+                  style={{ left: n.x, top: n.y }}
+                  onMouseDown={(e) => onNodeMouseDown(e, n.id)}
+                >
+                  <span className="ws-node-tag">{n.kind}</span>
+                  <h3>{n.title}</h3>
+                  <p>{n.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
 
           <div className="ws-toolbar" role="toolbar" aria-label="Verktyg">
             {TOOLS.map((t) => (
@@ -124,48 +265,6 @@ function WorkspacePage() {
               begrepp till ett växande nätverk.
             </p>
           </div>
-
-          <svg className="ws-edges" aria-hidden="true">
-            <defs>
-              <pattern id="dot" width="6" height="6" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="1" fill="#1a1a1a" opacity="0.25" />
-              </pattern>
-            </defs>
-            <path d="M 180 220 C 320 220, 360 360, 520 360" className="ws-edge" />
-            <path d="M 520 360 C 680 360, 720 220, 880 220" className="ws-edge" />
-            <path d="M 520 360 C 520 480, 280 520, 220 560" className="ws-edge" />
-            <path d="M 520 360 C 700 480, 820 520, 880 560" className="ws-edge" />
-          </svg>
-
-          <article className="ws-node ws-node-a" style={{ left: "6%", top: "20%" }}>
-            <span className="ws-node-tag">NEURON</span>
-            <h3>Aktionspotential</h3>
-            <p>Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV.</p>
-          </article>
-
-          <article className="ws-node ws-node-b" style={{ left: "40%", top: "40%" }}>
-            <span className="ws-node-tag">SYSTEM</span>
-            <h3>Limbiska systemet</h3>
-            <p>Amygdala, hippocampus, hypothalamus.</p>
-          </article>
-
-          <article className="ws-node ws-node-c" style={{ left: "70%", top: "18%" }}>
-            <span className="ws-node-tag">TRANSMITTOR</span>
-            <h3>Dopamin</h3>
-            <p>Belöning, motivation, motorik.</p>
-          </article>
-
-          <article className="ws-node ws-node-d" style={{ left: "10%", top: "62%" }}>
-            <span className="ws-node-tag">ANTECKNING</span>
-            <h3>Synaps</h3>
-            <p>Pre → klyfta → post. Vesiklar släpper signalsubstans.</p>
-          </article>
-
-          <article className="ws-node ws-node-e" style={{ left: "68%", top: "60%" }}>
-            <span className="ws-node-tag">FRÅGA</span>
-            <h3>Plasticitet?</h3>
-            <p>Hur formar LTP långtidsminnet i hippocampus?</p>
-          </article>
 
           <div className="ws-zoom" role="group" aria-label="Zoom">
             <button type="button" className="ws-zoom-btn" onClick={zoomIn} aria-label="Zooma in">+</button>
@@ -236,7 +335,7 @@ const css = `
 .ws-sidebar {
   position: absolute;
   top: 24px;
-  left: 0;
+  left: 24px;
   width: 280px;
   z-index: 4;
   background: var(--cream);
@@ -285,14 +384,26 @@ const css = `
   background: transparent;
   overflow: hidden;
   min-height: calc(100vh - 140px);
-  padding: 28px 0 28px calc(280px + 72px);
+  padding: 28px 0 28px calc(280px + 24px + 72px);
 }
+.ws-viewport {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+}
+.ws-viewport.is-adding { cursor: crosshair; }
 .ws-grid {
   position: absolute; inset: 0;
   background-image: radial-gradient(rgba(26,26,26,0.22) 1.2px, transparent 1.2px);
-  background-size: 22px 22px;
-  background-position: 0 0;
   pointer-events: none;
+}
+.ws-world {
+  position: absolute;
+  left: 0; top: 0;
+  width: 1px; height: 1px;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 .ws-canvas-head { position: relative; max-width: 560px; margin: 0 0 32px 0; }
 .ws-eyebrow {
@@ -307,7 +418,8 @@ const css = `
 .ws-sub { font-size: 16px; color: #3a3a3a; max-width: 48ch; margin: 0; }
 
 .ws-edges {
-  position: absolute; inset: 0; width: 100%; height: 100%;
+  position: absolute; left: 0; top: 0;
+  overflow: visible;
   pointer-events: none;
 }
 .ws-edge {
@@ -326,7 +438,8 @@ const css = `
   cursor: grab;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-.ws-node:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
+.ws-node:hover { box-shadow: 6px 6px 0 var(--ink); }
+.ws-node:active { cursor: grabbing; }
 .ws-node h3 {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 22px; margin: 6px 0 4px; letter-spacing: 0.03em;
@@ -351,7 +464,7 @@ const css = `
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
 .ws-toolbar {
-  position: absolute; left: calc(280px + 16px); top: 24px;
+  position: absolute; left: calc(24px + 280px + 16px); top: 24px;
   display: flex; flex-direction: column; gap: 6px;
   padding: 8px 6px;
   background: var(--cream); border: 2px solid var(--ink); border-radius: 14px;
@@ -370,7 +483,7 @@ const css = `
 .ws-tool-sep { height: 1px; background: rgba(26,26,26,0.18); margin: 4px 4px; }
 
 .ws-zoom {
-  position: absolute; right: 0; bottom: 22px;
+  position: absolute; right: 24px; bottom: 24px;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 10px 8px;
   background: var(--cream);
