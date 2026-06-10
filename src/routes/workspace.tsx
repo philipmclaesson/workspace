@@ -915,6 +915,26 @@ const css = `
 .ws-tool:disabled { opacity: 0.35; cursor: not-allowed; }
 .ws-tool.is-active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 .ws-tool-sep { height: 1px; background: rgba(26,26,26,0.18); margin: 4px 4px; }
+.ws-tool-label {
+  font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.18em;
+  color: rgba(26,26,26,0.55); text-align: center; padding: 2px 0;
+}
+.ws-tool-tpl { position: relative; }
+.ws-tpl-mini {
+  position: relative; width: 22px; height: 22px;
+  border: 1.5px solid currentColor; border-radius: 4px; display: block;
+  background: transparent;
+}
+.ws-tpl-mini-face {
+  position: absolute; left: 2px; top: 2px; width: 7px; height: 7px;
+  border-radius: 999px; background: currentColor; opacity: 0.7;
+}
+.ws-tpl-mini-bar {
+  position: absolute; right: 2px; height: 2px; border-radius: 1px; background: currentColor; opacity: 0.7;
+}
+.ws-tpl-mini-bar.b1 { top: 3px;  width: 9px; }
+.ws-tpl-mini-bar.b2 { top: 8px;  width: 11px; }
+.ws-tpl-mini-bar.b3 { top: 13px; width: 7px; }
 
 .ws-props {
   position: absolute; left: 50%; transform: translateX(-50%); top: 48px;
@@ -955,7 +975,11 @@ const css = `
   color: var(--ink);
 }
 .ws-zoom-btn:hover { background: var(--ink); color: var(--cream); }
-.ws-zoom-val { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink); display: inline-block; width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+.ws-zoom-val {
+  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0;
+  color: var(--ink); display: inline-block; width: 36px; text-align: center;
+  font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden;
+}
 .ws-zoom-fit {
   margin-top: 4px;
   padding: 6px 10px;
