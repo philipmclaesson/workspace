@@ -142,6 +142,7 @@ function BrainSvg({ highlights }: { highlights: { id: string; label: string; col
 type DragState =
   | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
   | { type: "move"; startX: number; startY: number; ids: string[]; origs: Record<string, { x: number; y: number }>; scale: number; snapshot: Item[] }
+  | { type: "rewire"; connId: string; end: "from" | "to"; snapshot: Item[] }
   | null;
 
 function WorkspacePage() {
