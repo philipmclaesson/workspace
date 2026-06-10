@@ -42,7 +42,9 @@ type NodeItem = Base & { type: "node"; tag: string; title: string; body: string 
 type RectItem = Base & { type: "rect" };
 type EllipseItem = Base & { type: "ellipse" };
 type ConnectorItem = { id: string; type: "connector"; from: string; to: string; color: Color };
-type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem;
+type ProfileStat = { label: string; value: string; color: Color };
+type ProfileItem = Base & { type: "profile"; name: string; role: string; stats: ProfileStat[] };
+type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem | ProfileItem;
 
 const INITIAL_ITEMS: Item[] = [
   { id: "n1", type: "node", x: 60, y: 80, w: 220, h: 100, color: "pink", tag: "NEURON", title: "Aktionspotential", body: "Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV." },
@@ -55,7 +57,7 @@ const INITIAL_ITEMS: Item[] = [
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem => it.type !== "connector";
+const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem => it.type !== "connector";
 
 type DragState =
   | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
@@ -293,6 +295,55 @@ function WorkspacePage() {
   const zoomOut = () => setZoom(z => clampZoom(z - 10));
   const zoomFit = () => { setZoom(100); setPan({ x: 40, y: 40 }); };
 
+  const insertProfileTemplate = () => {
+    const rect = viewportRef.current?.getBoundingClientRect();
+    const center = rect
+      ? toWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+      : { x: 400, y: 300 };
+    const profileId = uid();
+    const cx = Math.round(center.x);
+    const cy = Math.round(center.y);
+    const profile: ProfileItem = {
+      id: profileId,
+      type: "profile",
+      x: cx - 130, y: cy - 150,
+      w: 260, h: 320,
+      color: "cream",
+      name: "Emma Karlsson",
+      role: "TOP CUSTOMER",
+      stats: [
+        { label: "LTV", value: "1 258 €", color: "green" },
+        { label: "Churn risk", value: "22%", color: "pink" },
+        { label: "Last visit", value: "3 days ago", color: "yellow" },
+        { label: "Last purchase", value: "10 days ago", color: "blue" },
+      ],
+    };
+    const attrs: { tag: string; title: string; body: string; color: Color; dx: number; dy: number }[] = [
+      { tag: "ADS",      title: "Ads",       body: "Senast exponerad: 2 dagar sedan",     color: "lilac", dx: -420, dy: -180 },
+      { tag: "SALES",    title: "Sales",     body: "Tilldelad rep: Johan Berg",            color: "blue",  dx:  300, dy: -180 },
+      { tag: "ENGAGE",   title: "Engagement", body: "NPS 8 · Öppnar 64% av mail",          color: "green", dx: -420, dy:  220 },
+      { tag: "SUPPORT",  title: "Support",   body: "0 öppna ärenden · CSAT 4.8",           color: "yellow", dx:  300, dy:  220 },
+    ];
+    const nodes: NodeItem[] = attrs.map(a => ({
+      id: uid(),
+      type: "node",
+      x: cx + a.dx, y: cy + a.dy,
+      w: 200, h: 90,
+      color: a.color,
+      tag: a.tag, title: a.title, body: a.body,
+    }));
+    const connectors: ConnectorItem[] = nodes.map(n => ({
+      id: uid(), type: "connector", from: n.id, to: profileId, color: "ink",
+    }));
+    commit(its => [...its, profile, ...nodes, ...connectors]);
+    setSelected([profileId]);
+    setTool("select");
+  };
+
+  const TEMPLATES = [
+    { id: "profile", label: "Profil", hint: "PR", insert: insertProfileTemplate },
+  ];
+
   const TOOLS = [
     { id: "select", label: "Markera (V)" },
     { id: "sticky", label: "Post-it (N)" },
@@ -353,9 +404,43 @@ function WorkspacePage() {
           {!sideCollapsed && (
             <>
               <div className="ws-side-divider" />
+              <div className="ws-side-label">TEMPLATES</div>
+              <ul className="ws-side-templates">
+                {TEMPLATES.map(t => (
+                  <li key={t.id}>
+                    <button type="button" className="ws-template-card" onClick={t.insert} title={`Lägg in template: ${t.label}`}>
+                      <span className="ws-template-thumb" aria-hidden="true">
+                        <span className="ws-template-thumb-face" />
+                        <span className="ws-template-thumb-bar ws-tt-green" />
+                        <span className="ws-template-thumb-bar ws-tt-pink" />
+                        <span className="ws-template-thumb-bar ws-tt-yellow" />
+                      </span>
+                      <span className="ws-template-meta">
+                        <span className="ws-template-name">{t.label}</span>
+                        <span className="ws-template-desc">Profilkort + 4 noder</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="ws-side-divider" />
               <button type="button" className="ws-side-notes-btn" onClick={() => setShowNotes(v => !v)}>
                 {showNotes ? "DÖLJ ANTECKNINGAR" : "VISA ANTECKNINGAR"}
               </button>
+            </>
+          )}
+          {sideCollapsed && (
+            <>
+              <div className="ws-side-divider" />
+              {TEMPLATES.map(t => (
+                <button key={t.id} type="button" className="ws-side-item" onClick={t.insert} title={t.label} style={{ padding: "8px 0", justifyContent: "center", fontSize: 12 }}>
+                  <span className="ws-side-hint">{t.hint}</span>
+                </button>
+              ))}
+            </>
+          )}
+          {!sideCollapsed && (
+            <>
               {showNotes && (
                 <textarea
                   className="ws-side-notes"
@@ -443,6 +528,25 @@ function WorkspacePage() {
                 }
                 if (it.type === "rect") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
                 if (it.type === "ellipse") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
+                if (it.type === "profile") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} onDoubleClick={onDouble}>
+                      <div className="ws-profile-tag">{it.role}</div>
+                      <div className="ws-profile-avatar" aria-hidden="true">
+                        <svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="24" r="12" fill="#1a1a1a" opacity="0.18"/><path d="M8 60c0-13 11-22 24-22s24 9 24 22" fill="#1a1a1a" opacity="0.18"/></svg>
+                      </div>
+                      <div className="ws-profile-name">{it.name}</div>
+                      <ul className="ws-profile-stats">
+                        {it.stats.map((s, i) => (
+                          <li key={i} className={`ws-profile-stat color-${s.color}`}>
+                            <span className="ws-profile-stat-label">{s.label}</span>
+                            <span className="ws-profile-stat-value">{s.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
                 return null;
               })}
             </div>
@@ -742,6 +846,76 @@ const css = `
 .ws-rect.color-lilac, .ws-ellipse.color-lilac { background: rgba(182,168,232,0.7); }
 .ws-rect.color-cream, .ws-ellipse.color-cream { background: rgba(245,241,232,0.85); }
 .ws-rect.color-ink, .ws-ellipse.color-ink { background: rgba(26,26,26,0.85); }
+
+.ws-profile {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 14px 14px 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ws-profile-tag {
+  align-self: flex-start;
+  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em;
+  padding: 2px 8px; border: 1px solid var(--ink); border-radius: 999px;
+  background: var(--cream);
+}
+.ws-profile-avatar {
+  width: 100%; aspect-ratio: 4 / 3;
+  background: #d6d2c4; border: 2px solid var(--ink); border-radius: 10px;
+  display: grid; place-items: end center; overflow: hidden;
+}
+.ws-profile-name {
+  font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.03em;
+}
+.ws-profile-stats { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.ws-profile-stat {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 8px; border: 1px solid var(--ink); border-radius: 6px;
+  font-family: 'Space Mono', monospace; font-size: 11px;
+}
+.ws-profile-stat.color-yellow { background: #f5d76e; }
+.ws-profile-stat.color-pink   { background: #f1a7b0; }
+.ws-profile-stat.color-blue   { background: #a7c4f1; }
+.ws-profile-stat.color-green  { background: #a4d9a8; }
+.ws-profile-stat.color-lilac  { background: #b6a8e8; }
+.ws-profile-stat.color-cream  { background: #f5f1e8; }
+.ws-profile-stat.color-ink    { background: #1a1a1a; color: var(--cream); }
+.ws-profile-stat-label { letter-spacing: 0.08em; }
+.ws-profile-stat-value { font-weight: 700; }
+
+.ws-side-templates { list-style: none; padding: 0; margin: 8px 0 4px; display: flex; flex-direction: column; gap: 8px; }
+.ws-template-card {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 8px; border: 2px solid var(--ink); border-radius: 12px;
+  background: var(--cream); cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  text-align: left;
+}
+.ws-template-card:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+.ws-template-thumb {
+  position: relative; width: 44px; height: 44px; flex: none;
+  border: 1.5px solid var(--ink); border-radius: 6px; background: #eceadf;
+  overflow: hidden;
+}
+.ws-template-thumb-face {
+  position: absolute; left: 6px; top: 5px; width: 16px; height: 16px;
+  border-radius: 999px; background: #1a1a1a; opacity: 0.55;
+}
+.ws-template-thumb-bar {
+  position: absolute; right: 5px; height: 4px; border-radius: 2px; border: 1px solid var(--ink);
+}
+.ws-template-thumb-bar.ws-tt-green  { top: 8px;  width: 18px; background: #a4d9a8; }
+.ws-template-thumb-bar.ws-tt-pink   { top: 16px; width: 20px; background: #f1a7b0; }
+.ws-template-thumb-bar.ws-tt-yellow { top: 24px; width: 14px; background: #f5d76e; }
+.ws-template-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ws-template-name {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em; font-size: 14px;
+}
+.ws-template-desc { font-family: 'Space Mono', monospace; font-size: 10px; color: rgba(26,26,26,0.6); }
 
 .ws-toolbar {
   position: absolute; left: calc(24px + var(--side-w) + 24px); top: 48px;
