@@ -295,6 +295,55 @@ function WorkspacePage() {
   const zoomOut = () => setZoom(z => clampZoom(z - 10));
   const zoomFit = () => { setZoom(100); setPan({ x: 40, y: 40 }); };
 
+  const insertProfileTemplate = () => {
+    const rect = viewportRef.current?.getBoundingClientRect();
+    const center = rect
+      ? toWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+      : { x: 400, y: 300 };
+    const profileId = uid();
+    const cx = Math.round(center.x);
+    const cy = Math.round(center.y);
+    const profile: ProfileItem = {
+      id: profileId,
+      type: "profile",
+      x: cx - 130, y: cy - 150,
+      w: 260, h: 320,
+      color: "cream",
+      name: "Emma Karlsson",
+      role: "TOP CUSTOMER",
+      stats: [
+        { label: "LTV", value: "1 258 €", color: "green" },
+        { label: "Churn risk", value: "22%", color: "pink" },
+        { label: "Last visit", value: "3 days ago", color: "yellow" },
+        { label: "Last purchase", value: "10 days ago", color: "blue" },
+      ],
+    };
+    const attrs: { tag: string; title: string; body: string; color: Color; dx: number; dy: number }[] = [
+      { tag: "ADS",      title: "Ads",       body: "Senast exponerad: 2 dagar sedan",     color: "lilac", dx: -420, dy: -180 },
+      { tag: "SALES",    title: "Sales",     body: "Tilldelad rep: Johan Berg",            color: "blue",  dx:  300, dy: -180 },
+      { tag: "ENGAGE",   title: "Engagement", body: "NPS 8 · Öppnar 64% av mail",          color: "green", dx: -420, dy:  220 },
+      { tag: "SUPPORT",  title: "Support",   body: "0 öppna ärenden · CSAT 4.8",           color: "yellow", dx:  300, dy:  220 },
+    ];
+    const nodes: NodeItem[] = attrs.map(a => ({
+      id: uid(),
+      type: "node",
+      x: cx + a.dx, y: cy + a.dy,
+      w: 200, h: 90,
+      color: a.color,
+      tag: a.tag, title: a.title, body: a.body,
+    }));
+    const connectors: ConnectorItem[] = nodes.map(n => ({
+      id: uid(), type: "connector", from: n.id, to: profileId, color: "ink",
+    }));
+    commit(its => [...its, profile, ...nodes, ...connectors]);
+    setSelected([profileId]);
+    setTool("select");
+  };
+
+  const TEMPLATES = [
+    { id: "profile", label: "Profil", hint: "PR", insert: insertProfileTemplate },
+  ];
+
   const TOOLS = [
     { id: "select", label: "Markera (V)" },
     { id: "sticky", label: "Post-it (N)" },
@@ -355,9 +404,43 @@ function WorkspacePage() {
           {!sideCollapsed && (
             <>
               <div className="ws-side-divider" />
+              <div className="ws-side-label">TEMPLATES</div>
+              <ul className="ws-side-templates">
+                {TEMPLATES.map(t => (
+                  <li key={t.id}>
+                    <button type="button" className="ws-template-card" onClick={t.insert} title={`Lägg in template: ${t.label}`}>
+                      <span className="ws-template-thumb" aria-hidden="true">
+                        <span className="ws-template-thumb-face" />
+                        <span className="ws-template-thumb-bar ws-tt-green" />
+                        <span className="ws-template-thumb-bar ws-tt-pink" />
+                        <span className="ws-template-thumb-bar ws-tt-yellow" />
+                      </span>
+                      <span className="ws-template-meta">
+                        <span className="ws-template-name">{t.label}</span>
+                        <span className="ws-template-desc">Profilkort + 4 noder</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="ws-side-divider" />
               <button type="button" className="ws-side-notes-btn" onClick={() => setShowNotes(v => !v)}>
                 {showNotes ? "DÖLJ ANTECKNINGAR" : "VISA ANTECKNINGAR"}
               </button>
+            </>
+          )}
+          {sideCollapsed && (
+            <>
+              <div className="ws-side-divider" />
+              {TEMPLATES.map(t => (
+                <button key={t.id} type="button" className="ws-side-item" onClick={t.insert} title={t.label} style={{ padding: "8px 0", justifyContent: "center", fontSize: 12 }}>
+                  <span className="ws-side-hint">{t.hint}</span>
+                </button>
+              ))}
+            </>
+          )}
+          {!sideCollapsed && (
+            <>
               {showNotes && (
                 <textarea
                   className="ws-side-notes"
