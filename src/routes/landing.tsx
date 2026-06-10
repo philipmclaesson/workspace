@@ -106,6 +106,7 @@ const css = `
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center bottom;
   z-index: 0;
 }
 .lp-bg-overlay {
