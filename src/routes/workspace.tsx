@@ -852,6 +852,21 @@ const css = `
 }
 .ws-sidebar.is-collapsed { padding: 44px 6px 8px; }
 .ws-sidebar.is-collapsed .ws-side-toggle { z-index: 5; }
+.ws-empty {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 24px; pointer-events: none; z-index: 2;
+}
+.ws-empty-label {
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.25em; color: var(--coral);
+}
+.ws-empty-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 5vw, 56px);
+  letter-spacing: 0.02em; margin: 8px 0 6px; color: var(--ink);
+}
+.ws-empty-sub {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 16px; max-width: 460px; color: var(--ink); opacity: 0.7;
+}
 .ws-side-toggle {
   position: absolute; top: 8px; right: 8px;
   width: 26px; height: 26px;
