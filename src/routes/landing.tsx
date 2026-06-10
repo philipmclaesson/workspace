@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import favoLogo from "@/assets/favo-logo.png.asset.json";
 
 export const Route = createFileRoute("/landing")({
   head: () => ({
@@ -22,10 +23,11 @@ function LandingPage() {
       <style>{css}</style>
 
       <header className="lp-header">
-        <a href="/landing" className="lp-logo">BRACKET</a>
+        <a href="/landing" className="lp-logo" aria-label="FAVO">
+          <img src={favoLogo.url} alt="FAVO" className="lp-logo-img" />
+        </a>
         <nav className="lp-nav">
           <a href="/">Bracket</a>
-          <a href="/hjarna">Hjärna</a>
           <a href="/workspace">Workspace</a>
           <a href="#login" className="lp-nav-login">Login</a>
         </nav>
@@ -89,12 +91,16 @@ const css = `
   flex-shrink: 0;
 }
 .lp-logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(34px, 5vw, 54px);
-  letter-spacing: 0.04em;
-  color: var(--green);
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  text-shadow: 2px 2px 0 rgba(26,26,26,0.12);
+  line-height: 0;
+  padding-bottom: 14px;
+}
+.lp-logo-img {
+  height: clamp(30px, 3.8vw, 44px);
+  width: auto;
+  display: block;
 }
 .lp-nav { display: flex; gap: clamp(14px, 2.4vw, 28px); align-items: center; }
 .lp-nav a {
