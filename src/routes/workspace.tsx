@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export const Route = createFileRoute("/workspace")({
   head: () => ({
@@ -23,42 +23,179 @@ const SECTIONS: { id: SectionId; label: string; hint: string }[] = [
   { id: "questions", label: "Frågor", hint: "06" },
 ];
 
-type WsNode = {
-  id: string;
-  x: number;
-  y: number;
-  kind: string;
-  title: string;
-  body: string;
-  variant: "a" | "b" | "c" | "d" | "e";
+type Color = "yellow" | "pink" | "blue" | "green" | "lilac" | "cream" | "ink";
+const COLORS: Color[] = ["yellow", "pink", "blue", "green", "lilac", "cream", "ink"];
+const COLOR_HEX: Record<Color, string> = {
+  yellow: "#f5d76e",
+  pink: "#f1a7b0",
+  blue: "#a7c4f1",
+  green: "#a4d9a8",
+  lilac: "#b6a8e8",
+  cream: "#f5f1e8",
+  ink: "#1a1a1a",
 };
 
-const INITIAL_NODES: WsNode[] = [
-  { id: "n1", x: 80, y: 120, kind: "NEURON", title: "Aktionspotential", body: "Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV.", variant: "a" },
-  { id: "n2", x: 480, y: 280, kind: "SYSTEM", title: "Limbiska systemet", body: "Amygdala, hippocampus, hypothalamus.", variant: "b" },
-  { id: "n3", x: 880, y: 100, kind: "TRANSMITTOR", title: "Dopamin", body: "Belöning, motivation, motorik.", variant: "c" },
-  { id: "n4", x: 140, y: 480, kind: "ANTECKNING", title: "Synaps", body: "Pre → klyfta → post. Vesiklar släpper signalsubstans.", variant: "d" },
-  { id: "n5", x: 820, y: 460, kind: "FRÅGA", title: "Plasticitet?", body: "Hur formar LTP långtidsminnet i hippocampus?", variant: "e" },
+type Base = { id: string; x: number; y: number; w: number; h: number; color: Color };
+type StickyItem = Base & { type: "sticky"; text: string };
+type TextItem = Base & { type: "text"; text: string };
+type NodeItem = Base & { type: "node"; tag: string; title: string; body: string };
+type RectItem = Base & { type: "rect" };
+type EllipseItem = Base & { type: "ellipse" };
+type ConnectorItem = { id: string; type: "connector"; from: string; to: string; color: Color };
+type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem;
+
+const INITIAL_ITEMS: Item[] = [
+  { id: "n1", type: "node", x: 60, y: 80, w: 220, h: 100, color: "pink", tag: "NEURON", title: "Aktionspotential", body: "Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV." },
+  { id: "n2", type: "node", x: 460, y: 240, w: 220, h: 100, color: "green", tag: "SYSTEM", title: "Limbiska systemet", body: "Amygdala, hippocampus, hypothalamus." },
+  { id: "n3", type: "node", x: 860, y: 80, w: 220, h: 100, color: "blue", tag: "TRANSMITTOR", title: "Dopamin", body: "Belöning, motivation, motorik." },
+  { id: "s1", type: "sticky", x: 120, y: 420, w: 180, h: 140, color: "yellow", text: "LTP → långtidsminne i hippocampus" },
+  { id: "t1", type: "text", x: 480, y: 60, w: 260, h: 36, color: "ink", text: "Översikt — nervsystemet" },
+  { id: "c1", type: "connector", from: "n1", to: "n2", color: "ink" },
+  { id: "c2", type: "connector", from: "n2", to: "n3", color: "ink" },
 ];
 
+const uid = () => Math.random().toString(36).slice(2, 10);
+const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem => it.type !== "connector";
+
+type DragState =
+  | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
+  | { type: "move"; startX: number; startY: number; ids: string[]; origs: Record<string, { x: number; y: number }>; scale: number; snapshot: Item[] }
+  | null;
+
 function WorkspacePage() {
+  const [items, setItemsRaw] = useState<Item[]>(INITIAL_ITEMS);
+  const histRef = useRef<{ past: Item[][]; future: Item[][] }>({ past: [], future: [] });
+
+  const commit = (next: Item[] | ((prev: Item[]) => Item[])) => {
+    setItemsRaw(prev => {
+      const value = typeof next === "function" ? (next as (p: Item[]) => Item[])(prev) : next;
+      histRef.current.past.push(prev);
+      if (histRef.current.past.length > 80) histRef.current.past.shift();
+      histRef.current.future = [];
+      return value;
+    });
+  };
+
+  const undo = () => {
+    const h = histRef.current;
+    if (!h.past.length) return;
+    setItemsRaw(prev => {
+      h.future.unshift(prev);
+      return h.past.pop()!;
+    });
+  };
+  const redo = () => {
+    const h = histRef.current;
+    if (!h.future.length) return;
+    setItemsRaw(prev => {
+      h.past.push(prev);
+      return h.future.shift()!;
+    });
+  };
+
   const [active, setActive] = useState<SectionId>("overview");
+  const [notes, setNotes] = useState<Record<SectionId, string>>({ overview: "", notes: "", concepts: "", neurons: "", sources: "", questions: "" });
   const [zoom, setZoom] = useState(100);
   const [tool, setTool] = useState<string>("select");
   const [pan, setPan] = useState({ x: 40, y: 40 });
-  const [nodes, setNodes] = useState<WsNode[]>(INITIAL_NODES);
   const [sideCollapsed, setSideCollapsed] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingFrom, setPendingFrom] = useState<string | null>(null);
+
   const viewportRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<
-    | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
-    | { type: "node"; startX: number; startY: number; nodeId: string; origNode: { x: number; y: number }; scale: number }
-    | null
-  >(null);
+  const dragRef = useRef<DragState>(null);
   const scale = zoom / 100;
   const clampZoom = (z: number) => Math.max(25, Math.min(250, z));
-  const zoomIn = () => setZoom((z) => clampZoom(z + 10));
-  const zoomOut = () => setZoom((z) => clampZoom(z - 10));
-  const zoomFit = () => { setZoom(100); setPan({ x: 40, y: 40 }); };
+
+  const itemsMap = useMemo(() => {
+    const m = new Map<string, Item>();
+    items.forEach(it => m.set(it.id, it));
+    return m;
+  }, [items]);
+
+  const toWorld = (cx: number, cy: number) => {
+    const rect = viewportRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return { x: (cx - rect.left - pan.x) / scale, y: (cy - rect.top - pan.y) / scale };
+  };
+
+  const addItemAt = (w: { x: number; y: number }): Item | null => {
+    if (tool === "sticky") return { id: uid(), type: "sticky", x: w.x - 90, y: w.y - 70, w: 180, h: 140, color: "yellow", text: "" };
+    if (tool === "text") return { id: uid(), type: "text", x: w.x - 60, y: w.y - 14, w: 200, h: 32, color: "ink", text: "Text" };
+    if (tool === "node") return { id: uid(), type: "node", x: w.x - 110, y: w.y - 50, w: 220, h: 100, color: "cream", tag: "MODUL", title: "Ny modul", body: "Dubbelklicka för att redigera" };
+    if (tool === "rect") return { id: uid(), type: "rect", x: w.x - 80, y: w.y - 50, w: 160, h: 100, color: "blue" };
+    if (tool === "ellipse") return { id: uid(), type: "ellipse", x: w.x - 80, y: w.y - 50, w: 160, h: 100, color: "pink" };
+    return null;
+  };
+
+  const onCanvasMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    if (tool === "select" || tool === "hand") {
+      setSelected([]);
+      setEditingId(null);
+      dragRef.current = { type: "pan", startX: e.clientX, startY: e.clientY, origPan: { ...pan } };
+      document.body.style.cursor = "grabbing";
+      return;
+    }
+    if (tool === "connector") { setPendingFrom(null); return; }
+    const item = addItemAt(toWorld(e.clientX, e.clientY));
+    if (item) {
+      commit(its => [...its, item]);
+      setSelected([item.id]);
+      setTool("select");
+      if (item.type === "sticky" || item.type === "text" || item.type === "node") setEditingId(item.id);
+    }
+  };
+
+  const onItemMouseDown = (e: React.MouseEvent, id: string) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    const item = itemsMap.get(id);
+    if (!item) return;
+
+    if (tool === "connector" && item.type !== "connector") {
+      if (!pendingFrom) {
+        setPendingFrom(id);
+      } else if (pendingFrom !== id) {
+        const newConn: ConnectorItem = { id: uid(), type: "connector", from: pendingFrom, to: id, color: "ink" };
+        commit(its => [...its, newConn]);
+        setPendingFrom(null);
+        setTool("select");
+      } else {
+        setPendingFrom(null);
+      }
+      return;
+    }
+
+    let nextSelected = selected;
+    if (e.shiftKey) {
+      nextSelected = selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id];
+    } else if (!selected.includes(id)) {
+      nextSelected = [id];
+    }
+    setSelected(nextSelected);
+    setEditingId(null);
+
+    if (item.type === "connector") return;
+    const movingIds = nextSelected.length ? nextSelected : [id];
+    const origs: Record<string, { x: number; y: number }> = {};
+    movingIds.forEach(mid => {
+      const it = itemsMap.get(mid);
+      if (it && it.type !== "connector") origs[mid] = { x: it.x, y: it.y };
+    });
+    dragRef.current = {
+      type: "move",
+      startX: e.clientX,
+      startY: e.clientY,
+      ids: Object.keys(origs),
+      origs,
+      scale,
+      snapshot: items,
+    };
+    document.body.style.cursor = "grabbing";
+  };
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -69,44 +206,27 @@ function WorkspacePage() {
       if (d.type === "pan") {
         setPan({ x: d.origPan.x + dx, y: d.origPan.y + dy });
       } else {
-        const id = d.nodeId;
         const s = d.scale;
-        setNodes((ns) => ns.map((n) => n.id === id ? { ...n, x: d.origNode.x + dx / s, y: d.origNode.y + dy / s } : n));
+        setItemsRaw(prev => prev.map(it => {
+          if (it.type === "connector" || !d.origs[it.id]) return it;
+          return { ...it, x: d.origs[it.id].x + dx / s, y: d.origs[it.id].y + dy / s };
+        }));
       }
     };
-    const onUp = () => { dragRef.current = null; document.body.style.cursor = ""; };
+    const onUp = () => {
+      const d = dragRef.current;
+      if (d?.type === "move") {
+        histRef.current.past.push(d.snapshot);
+        if (histRef.current.past.length > 80) histRef.current.past.shift();
+        histRef.current.future = [];
+      }
+      dragRef.current = null;
+      document.body.style.cursor = "";
+    };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
   }, []);
-
-  const onCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    if (tool === "node") {
-      const rect = viewportRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const x = (e.clientX - rect.left - pan.x) / scale - 110;
-      const y = (e.clientY - rect.top - pan.y) / scale - 30;
-      const id = `n${Date.now()}`;
-      setNodes((ns) => [...ns, { id, x, y, kind: "NY NOD", title: "Ny nod", body: "Dubbelklicka för att redigera.", variant: "d" }]);
-      setTool("select");
-      return;
-    }
-    dragRef.current = { type: "pan", startX: e.clientX, startY: e.clientY, origPan: { ...pan } };
-    document.body.style.cursor = "grabbing";
-  };
-
-  const onNodeMouseDown = (e: React.MouseEvent, id: string) => {
-    if (e.button !== 0) return;
-    e.stopPropagation();
-    const n = nodes.find((n) => n.id === id);
-    if (!n) return;
-    dragRef.current = { type: "node", startX: e.clientX, startY: e.clientY, nodeId: id, origNode: { x: n.x, y: n.y }, scale };
-    document.body.style.cursor = "grabbing";
-  };
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -117,14 +237,11 @@ function WorkspacePage() {
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       const factor = e.deltaY > 0 ? 0.92 : 1.08;
-      setZoom((z) => {
+      setZoom(z => {
         const next = clampZoom(z * factor);
         const oldScale = z / 100;
         const newScale = next / 100;
-        setPan((p) => ({
-          x: mx - ((mx - p.x) / oldScale) * newScale,
-          y: my - ((my - p.y) / oldScale) * newScale,
-        }));
+        setPan(p => ({ x: mx - ((mx - p.x) / oldScale) * newScale, y: my - ((my - p.y) / oldScale) * newScale }));
         return next;
       });
     };
@@ -132,35 +249,76 @@ function WorkspacePage() {
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
+  const deleteSelected = () => {
+    if (!selected.length) return;
+    commit(its => its.filter(it => !selected.includes(it.id) && !(it.type === "connector" && (selected.includes(it.from) || selected.includes(it.to)))));
+    setSelected([]);
+  };
 
-  const TOOLS: { id: string; label: string; icon: React.ReactNode }[] = [
-    { id: "select", label: "Välj", icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>
-    )},
-    { id: "node", label: "Lägg till nod", icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
-    )},
-    { id: "note", label: "Anteckning", icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4"/></svg>
-    )},
-    { id: "text", label: "Text", icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 5h14M12 5v14"/></svg>
-    )},
-    { id: "edge", label: "Koppling", icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><path d="M7.5 12h9"/></svg>
-    )},
-    { id: "group", label: "Grupp", icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-    )},
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (editingId) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if ((e.key === "Delete" || e.key === "Backspace") && selected.length) {
+        e.preventDefault();
+        deleteSelected();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault(); undo();
+      } else if ((e.metaKey || e.ctrlKey) && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
+        e.preventDefault(); redo();
+      } else if (e.key === "Escape") {
+        setSelected([]); setTool("select"); setPendingFrom(null); setEditingId(null);
+      } else if (e.key === "v") setTool("select");
+      else if (e.key === "n") setTool("sticky");
+      else if (e.key === "t") setTool("text");
+      else if (e.key === "m") setTool("node");
+      else if (e.key === "r") setTool("rect");
+      else if (e.key === "o") setTool("ellipse");
+      else if (e.key === "c") setTool("connector");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingId, selected]);
+
+  const updateItem = (id: string, patch: Partial<Item>) => {
+    commit(its => its.map(it => it.id === id ? ({ ...it, ...patch } as Item) : it));
+  };
+  const setItemColor = (id: string, color: Color) => {
+    commit(its => its.map(it => it.id === id ? ({ ...it, color } as Item) : it));
+  };
+
+  const zoomIn = () => setZoom(z => clampZoom(z + 10));
+  const zoomOut = () => setZoom(z => clampZoom(z - 10));
+  const zoomFit = () => { setZoom(100); setPan({ x: 40, y: 40 }); };
+
+  const TOOLS = [
+    { id: "select", label: "Markera (V)" },
+    { id: "sticky", label: "Post-it (N)" },
+    { id: "text", label: "Text (T)" },
+    { id: "node", label: "Modul (M)" },
+    { id: "rect", label: "Rektangel (R)" },
+    { id: "ellipse", label: "Ellips (O)" },
+    { id: "connector", label: "Koppling (C)" },
   ];
+  const TOOL_ICONS: Record<string, React.ReactNode> = {
+    select: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>,
+    sticky: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v4h4"/></svg>,
+    text: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 5h14M12 5v14"/></svg>,
+    node: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="6" width="18" height="12" rx="2"/></svg>,
+    rect: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>,
+    ellipse: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="12" rx="8" ry="6"/></svg>,
+    connector: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><path d="M7.5 12h9"/></svg>,
+  };
+
+  const selectedItem = selected.length === 1 ? itemsMap.get(selected[0]) ?? null : null;
+
   return (
     <main className="ws-root">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;700;900&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap"
-        rel="stylesheet"
-      />
+      <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;700;900&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
       <style>{css}</style>
 
       <header className="ws-header">
@@ -175,104 +333,150 @@ function WorkspacePage() {
 
       <div className={`ws-shell ${sideCollapsed ? "is-collapsed" : ""}`}>
         <aside className={`ws-sidebar ${sideCollapsed ? "is-collapsed" : ""}`}>
-          <button
-            type="button"
-            className="ws-side-toggle"
-            onClick={() => setSideCollapsed((v) => !v)}
-            aria-label={sideCollapsed ? "Fäll ut" : "Fäll in"}
-            title={sideCollapsed ? "Fäll ut" : "Fäll in"}
-          >
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-              {sideCollapsed
-                ? <path d="M9 6l6 6-6 6" />
-                : <path d="M15 6l-6 6 6 6" />}
-            </svg>
+          <button type="button" className="ws-side-toggle" onClick={() => setSideCollapsed(v => !v)} aria-label={sideCollapsed ? "Fäll ut" : "Fäll in"} title={sideCollapsed ? "Fäll ut" : "Fäll in"}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">{sideCollapsed ? <path d="M9 6l6 6-6 6"/> : <path d="M15 6l-6 6 6 6"/>}</svg>
           </button>
           {!sideCollapsed && <div className="ws-side-label">KURS</div>}
           {!sideCollapsed && <h2 className="ws-side-title">Biologisk<br/>Psykologi</h2>}
           <ul className="ws-side-list">
-            {SECTIONS.map((s) => (
+            {SECTIONS.map(s => (
               <li key={s.id}>
-                <button
-                  type="button"
-                  className={`ws-side-item ${active === s.id ? "is-active" : ""}`}
-                  onClick={() => setActive(s.id)}
-                  title={s.label}
-                >
+                <button type="button" className={`ws-side-item ${active === s.id ? "is-active" : ""}`} onClick={() => setActive(s.id)} title={s.label}>
                   <span className="ws-side-hint">{s.hint}</span>
                   {!sideCollapsed && <span className="ws-side-name">{s.label}</span>}
                 </button>
               </li>
             ))}
           </ul>
-          <button type="button" className="ws-side-add" title="Ny sektion">
-            {sideCollapsed ? "+" : "+ NY SEKTION"}
-          </button>
+          <button type="button" className="ws-side-add" title="Ny sektion">{sideCollapsed ? "+" : "+ NY SEKTION"}</button>
+
+          {!sideCollapsed && (
+            <>
+              <div className="ws-side-divider" />
+              <button type="button" className="ws-side-notes-btn" onClick={() => setShowNotes(v => !v)}>
+                {showNotes ? "DÖLJ ANTECKNINGAR" : "VISA ANTECKNINGAR"}
+              </button>
+              {showNotes && (
+                <textarea
+                  className="ws-side-notes"
+                  placeholder={`Anteckningar för ${SECTIONS.find(s => s.id === active)?.label}…`}
+                  value={notes[active]}
+                  onChange={(e) => setNotes(n => ({ ...n, [active]: e.target.value }))}
+                />
+              )}
+            </>
+          )}
         </aside>
 
         <section className="ws-canvas">
           <div
             ref={viewportRef}
-            className={`ws-viewport ${tool === "node" ? "is-adding" : ""}`}
+            className={`ws-viewport tool-${tool} ${pendingFrom ? "is-linking" : ""}`}
             onMouseDown={onCanvasMouseDown}
           >
-            <div
-              className="ws-grid"
-              aria-hidden="true"
-              style={{
-                backgroundSize: `${22 * scale}px ${22 * scale}px`,
-                backgroundPosition: `${pan.x}px ${pan.y}px`,
-              }}
-            />
-            <div
-              className="ws-world"
-              style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}
-            >
-              <svg className="ws-edges" aria-hidden="true" width="2000" height="1400">
-                {nodes.length >= 2 && nodes.slice(1).map((n, i) => {
-                  const a = nodes[0];
-                  const ax = a.x + 110, ay = a.y + 40;
-                  const bx = n.x + 110, by = n.y + 40;
+            <div className="ws-grid" aria-hidden="true" style={{ backgroundSize: `${22 * scale}px ${22 * scale}px`, backgroundPosition: `${pan.x}px ${pan.y}px` }} />
+            <div className="ws-world" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}>
+              <svg className="ws-edges" aria-hidden="true" width="6000" height="4000" style={{ left: -2000, top: -2000 }}>
+                {items.filter((it): it is ConnectorItem => it.type === "connector").map(c => {
+                  const a = itemsMap.get(c.from);
+                  const b = itemsMap.get(c.to);
+                  if (!a || !b || a.type === "connector" || b.type === "connector") return null;
+                  const ax = a.x + a.w / 2 + 2000, ay = a.y + a.h / 2 + 2000;
+                  const bx = b.x + b.w / 2 + 2000, by = b.y + b.h / 2 + 2000;
                   const cx = (ax + bx) / 2;
-                  return <path key={`e-${n.id}-${i}`} d={`M ${ax} ${ay} C ${cx} ${ay}, ${cx} ${by}, ${bx} ${by}`} className="ws-edge" />;
+                  const sel = selected.includes(c.id);
+                  return (
+                    <g key={c.id} style={{ pointerEvents: "auto", cursor: "pointer" }} onMouseDown={(e) => { e.stopPropagation(); setSelected([c.id]); }}>
+                      <path d={`M ${ax} ${ay} C ${cx} ${ay}, ${cx} ${by}, ${bx} ${by}`} fill="none" stroke={COLOR_HEX[c.color]} strokeWidth={sel ? 3 : 2} strokeDasharray={sel ? "0" : "4 5"} opacity={sel ? 1 : 0.7} />
+                      <circle cx={bx} cy={by} r={5} fill={COLOR_HEX[c.color]} />
+                    </g>
+                  );
                 })}
               </svg>
-              {nodes.map((n) => (
-                <article
-                  key={n.id}
-                  className={`ws-node ws-node-${n.variant}`}
-                  style={{ left: n.x, top: n.y }}
-                  onMouseDown={(e) => onNodeMouseDown(e, n.id)}
-                >
-                  <span className="ws-node-tag">{n.kind}</span>
-                  <h3>{n.title}</h3>
-                  <p>{n.body}</p>
-                </article>
-              ))}
+              {items.filter(isShape).map(it => {
+                const sel = selected.includes(it.id);
+                const fromMark = pendingFrom === it.id;
+                const cls = `ws-item ws-${it.type} color-${it.color} ${sel ? "is-selected" : ""} ${fromMark ? "is-from" : ""}`;
+                const baseStyle: React.CSSProperties = { left: it.x, top: it.y, width: it.w, height: it.h };
+                const onDown = (e: React.MouseEvent) => onItemMouseDown(e, it.id);
+                const onDouble = (e: React.MouseEvent) => { e.stopPropagation(); if (it.type === "sticky" || it.type === "text" || it.type === "node") setEditingId(it.id); };
+
+                if (it.type === "sticky") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} onDoubleClick={onDouble}>
+                      {editingId === it.id ? (
+                        <textarea autoFocus className="ws-sticky-edit" defaultValue={it.text} onBlur={(e) => { updateItem(it.id, { text: e.target.value } as Partial<Item>); setEditingId(null); }} onKeyDown={(e) => { if (e.key === "Escape") setEditingId(null); }} />
+                      ) : (
+                        <div className="ws-sticky-text">{it.text || "Dubbelklicka för att skriva"}</div>
+                      )}
+                    </div>
+                  );
+                }
+                if (it.type === "text") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} onDoubleClick={onDouble}>
+                      {editingId === it.id ? (
+                        <input autoFocus className="ws-text-edit" defaultValue={it.text} onBlur={(e) => { updateItem(it.id, { text: e.target.value } as Partial<Item>); setEditingId(null); }} onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") (e.target as HTMLInputElement).blur(); }} />
+                      ) : (
+                        <div className="ws-text-show">{it.text}</div>
+                      )}
+                    </div>
+                  );
+                }
+                if (it.type === "node") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} onDoubleClick={onDouble}>
+                      <span className="ws-node-tag">{it.tag}</span>
+                      {editingId === it.id ? (
+                        <>
+                          <input autoFocus className="ws-node-title-edit" defaultValue={it.title} onBlur={(e) => updateItem(it.id, { title: e.target.value } as Partial<Item>)} />
+                          <textarea className="ws-node-body-edit" defaultValue={it.body} onBlur={(e) => { updateItem(it.id, { body: e.target.value } as Partial<Item>); setEditingId(null); }} />
+                        </>
+                      ) : (
+                        <>
+                          <h3>{it.title}</h3>
+                          <p>{it.body}</p>
+                        </>
+                      )}
+                    </div>
+                  );
+                }
+                if (it.type === "rect") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
+                if (it.type === "ellipse") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
+                return null;
+              })}
             </div>
           </div>
 
           <div className="ws-toolbar" role="toolbar" aria-label="Verktyg">
-            {TOOLS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                className={`ws-tool ${tool === t.id ? "is-active" : ""}`}
-                onClick={() => setTool(t.id)}
-                title={t.label}
-                aria-label={t.label}
-              >
-                {t.icon}
+            {TOOLS.map(t => (
+              <button key={t.id} type="button" className={`ws-tool ${tool === t.id ? "is-active" : ""}`} onClick={() => { setTool(t.id); setPendingFrom(null); }} title={t.label} aria-label={t.label}>
+                {TOOL_ICONS[t.id]}
               </button>
             ))}
             <div className="ws-tool-sep" />
-            <button type="button" className="ws-tool" title="Ångra" aria-label="Ångra">
+            <button type="button" className="ws-tool" onClick={undo} title="Ångra" aria-label="Ångra">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg>
             </button>
-            <button type="button" className="ws-tool" title="Gör om" aria-label="Gör om">
+            <button type="button" className="ws-tool" onClick={redo} title="Gör om" aria-label="Gör om">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h3"/></svg>
             </button>
+            <button type="button" className="ws-tool" onClick={deleteSelected} disabled={!selected.length} title="Radera" aria-label="Radera">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>
+            </button>
           </div>
+
+          {selectedItem && (
+            <div className="ws-props" role="group" aria-label="Egenskaper">
+              <span className="ws-props-label">FÄRG</span>
+              <div className="ws-swatches">
+                {COLORS.map(c => (
+                  <button key={c} type="button" className={`ws-swatch ${(selectedItem as { color: Color }).color === c ? "is-active" : ""}`} style={{ background: COLOR_HEX[c] }} onClick={() => setItemColor(selectedItem.id, c)} aria-label={c} />
+                ))}
+              </div>
+              <button type="button" className="ws-props-del" onClick={deleteSelected}>RADERA</button>
+            </div>
+          )}
 
           <div className="ws-zoom" role="group" aria-label="Zoom">
             <button type="button" className="ws-zoom-btn" onClick={zoomIn} aria-label="Zooma in">+</button>
@@ -295,6 +499,8 @@ const css = `
   --teal: #3f8f81;
   --blue: #2255cc;
   --lilac: #b6a8e8;
+  --yellow: #f5d76e;
+  --pink: #f1a7b0;
   background: var(--cream);
   color: var(--ink);
   min-height: 100vh;
@@ -354,6 +560,8 @@ const css = `
   box-shadow: 4px 4px 0 var(--ink);
   padding: 22px 18px;
   transition: width 0.18s ease, padding 0.18s ease;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
 }
 .ws-sidebar.is-collapsed { padding: 8px 6px; }
 .ws-side-toggle {
@@ -388,36 +596,38 @@ const css = `
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
   box-shadow: 3px 3px 0 var(--ink);
 }
-.ws-sidebar.is-collapsed .ws-side-item {
-  padding: 8px 0;
-  justify-content: center;
-  gap: 0;
-  font-size: 12px;
-}
+.ws-sidebar.is-collapsed .ws-side-item { padding: 8px 0; justify-content: center; gap: 0; font-size: 12px; }
 .ws-sidebar.is-collapsed .ws-side-hint { opacity: 1; }
-.ws-sidebar.is-collapsed .ws-side-add {
-  padding: 8px 0;
-  font-size: 16px;
-  border-style: solid;
-}
+.ws-sidebar.is-collapsed .ws-side-add { padding: 8px 0; font-size: 16px; border-style: solid; }
 .ws-side-item:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
 .ws-side-item.is-active { background: var(--green); color: #f5f1e8; }
-.ws-side-hint {
-  font-family: 'Space Mono', monospace; font-size: 11px; opacity: 0.7;
-}
+.ws-side-hint { font-family: 'Space Mono', monospace; font-size: 11px; opacity: 0.7; }
 .ws-side-add {
   width: 100%; padding: 10px; border: 2px dashed var(--ink); border-radius: 14px;
   background: transparent; cursor: pointer;
   font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: 0.15em;
 }
 .ws-side-add:hover { background: var(--ink); color: var(--cream); }
+.ws-side-divider { height: 1px; background: rgba(26,26,26,0.18); margin: 16px 0; }
+.ws-side-notes-btn {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--ink); border-radius: 10px;
+  background: var(--cream); cursor: pointer;
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--ink);
+}
+.ws-side-notes-btn:hover { background: var(--ink); color: var(--cream); }
+.ws-side-notes {
+  width: 100%; min-height: 140px; margin-top: 10px;
+  border: 2px solid var(--ink); border-radius: 12px; padding: 10px;
+  background: #fffdf6; resize: vertical; font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
+  box-shadow: inset 0 0 0 1px rgba(26,26,26,0.04);
+}
 
 .ws-canvas {
   position: relative;
   background: transparent;
   overflow: hidden;
   min-height: calc(100vh - 140px);
-  padding: 28px 0 28px calc(280px + 24px + 72px);
+  padding: 28px 0 28px 0;
 }
 .ws-viewport {
   position: absolute; left: 0; right: 0; top: 24px; bottom: 24px;
@@ -425,7 +635,9 @@ const css = `
   cursor: grab;
   user-select: none;
 }
-.ws-viewport.is-adding { cursor: crosshair; }
+.ws-viewport.tool-sticky, .ws-viewport.tool-text, .ws-viewport.tool-node,
+.ws-viewport.tool-rect, .ws-viewport.tool-ellipse { cursor: crosshair; }
+.ws-viewport.tool-connector, .ws-viewport.is-linking { cursor: cell; }
 .ws-grid {
   position: absolute; inset: 0;
   background-image: radial-gradient(rgba(26,26,26,0.22) 1.2px, transparent 1.2px);
@@ -438,63 +650,98 @@ const css = `
   transform-origin: 0 0;
   will-change: transform;
 }
-.ws-canvas-head { position: relative; max-width: 560px; margin: 0 0 32px 0; }
-.ws-eyebrow {
-  font-family: 'Space Mono', monospace; font-size: 11px;
-  letter-spacing: 0.2em; color: var(--coral); text-transform: uppercase;
-}
-.ws-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(40px, 6vw, 76px);
-  line-height: 0.9; margin: 6px 0 10px;
-}
-.ws-sub { font-size: 16px; color: #3a3a3a; max-width: 48ch; margin: 0; }
-
 .ws-edges {
-  position: absolute; left: 0; top: 0;
+  position: absolute;
   overflow: visible;
   pointer-events: none;
 }
-.ws-edge {
-  fill: none; stroke: var(--ink); stroke-width: 1.5;
-  stroke-dasharray: 4 5; opacity: 0.5;
+
+.ws-item {
+  position: absolute;
+  cursor: grab;
+}
+.ws-item:active { cursor: grabbing; }
+.ws-item.is-selected { outline: 2px solid var(--coral); outline-offset: 4px; border-radius: 6px; }
+.ws-item.is-from { outline: 2px dashed var(--blue); outline-offset: 4px; }
+
+.ws-sticky {
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 12px 14px;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.ws-sticky.color-yellow { background: #f5d76e; }
+.ws-sticky.color-pink { background: #f1a7b0; }
+.ws-sticky.color-blue { background: #a7c4f1; }
+.ws-sticky.color-green { background: #a4d9a8; }
+.ws-sticky.color-lilac { background: #b6a8e8; }
+.ws-sticky.color-cream { background: #f5f1e8; }
+.ws-sticky.color-ink { background: #1a1a1a; color: #f5f1e8; }
+.ws-sticky-text { font-size: 15px; line-height: 1.3; width: 100%; word-break: break-word; }
+.ws-sticky-edit {
+  width: 100%; height: 100%;
+  border: 0; outline: 0; background: transparent;
+  font: inherit; resize: none; text-align: center;
 }
 
+.ws-text {
+  display: flex; align-items: center;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.03em;
+}
+.ws-text-show { font-size: 22px; line-height: 1.1; width: 100%; }
+.ws-text-edit { width: 100%; border: 0; outline: 0; background: transparent; font: inherit; }
+.ws-text.color-coral .ws-text-show, .ws-text.color-pink .ws-text-show { color: var(--coral); }
+.ws-text.color-blue .ws-text-show { color: var(--blue); }
+.ws-text.color-green .ws-text-show { color: var(--green); }
+.ws-text.color-cream .ws-text-show { color: var(--cream); text-shadow: 1px 1px 0 var(--ink); }
+.ws-text.color-ink .ws-text-show { color: var(--ink); }
+
 .ws-node {
-  position: absolute;
-  width: 220px;
   background: var(--cream);
   border: 2px solid var(--ink);
   border-radius: 18px;
   box-shadow: 4px 4px 0 var(--ink);
-  padding: 14px 16px;
-  cursor: grab;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 4px;
 }
-.ws-node:hover { box-shadow: 6px 6px 0 var(--ink); }
-.ws-node:active { cursor: grabbing; }
-.ws-node h3 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px; margin: 6px 0 4px; letter-spacing: 0.03em;
-}
-.ws-node p { margin: 0; font-size: 14px; color: #2a2a2a; line-height: 1.3; }
+.ws-node.color-yellow { background: #f5d76e; }
+.ws-node.color-pink { background: #f1a7b0; }
+.ws-node.color-blue { background: #a7c4f1; }
+.ws-node.color-green { background: #a4d9a8; }
+.ws-node.color-lilac { background: #b6a8e8; }
+.ws-node.color-cream { background: #f5f1e8; }
+.ws-node.color-ink { background: #1a1a1a; color: #f5f1e8; }
+.ws-node.color-ink p { color: rgba(245,241,232,0.8); }
+.ws-node.color-ink .ws-node-tag { color: var(--cream); border-color: var(--cream); }
+.ws-node h3 { font-family: 'Bebas Neue', sans-serif; font-size: 20px; margin: 2px 0 2px; letter-spacing: 0.03em; }
+.ws-node p { margin: 0; font-size: 13px; color: #2a2a2a; line-height: 1.3; }
 .ws-node-tag {
-  display: inline-block; font-family: 'Space Mono', monospace;
+  align-self: flex-start; font-family: 'Space Mono', monospace;
   font-size: 10px; letter-spacing: 0.18em;
-  padding: 3px 8px; border: 1px solid var(--ink); border-radius: 999px;
+  padding: 2px 8px; border: 1px solid var(--ink); border-radius: 999px;
 }
-.ws-node-a { background: #f1e1da; }
-.ws-node-a .ws-node-tag { color: var(--coral); border-color: var(--coral); }
-.ws-node-b { background: var(--green); color: var(--cream); }
-.ws-node-b p { color: rgba(245,241,232,0.85); }
-.ws-node-b .ws-node-tag { color: var(--cream); border-color: var(--cream); }
-.ws-node-c { background: #e6dffa; }
-.ws-node-c .ws-node-tag { color: var(--blue); border-color: var(--blue); }
-.ws-node-d { background: var(--cream); }
-.ws-node-d .ws-node-tag { color: var(--teal); border-color: var(--teal); }
-.ws-node-e { background: var(--ink); color: var(--cream); }
-.ws-node-e p { color: rgba(245,241,232,0.8); }
-.ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
+.ws-node-title-edit { font: inherit; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.03em; border: 0; outline: 0; background: rgba(255,255,255,0.4); padding: 2px 4px; border-radius: 4px; }
+.ws-node-body-edit { font: inherit; font-size: 13px; resize: none; border: 0; outline: 0; background: rgba(255,255,255,0.4); padding: 4px; border-radius: 4px; flex: 1; }
+
+.ws-rect, .ws-ellipse {
+  border: 2px solid var(--ink);
+  background: rgba(167,196,241,0.55);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.ws-rect { border-radius: 14px; }
+.ws-ellipse { border-radius: 50%; }
+.ws-rect.color-yellow, .ws-ellipse.color-yellow { background: rgba(245,215,110,0.7); }
+.ws-rect.color-pink, .ws-ellipse.color-pink { background: rgba(241,167,176,0.7); }
+.ws-rect.color-blue, .ws-ellipse.color-blue { background: rgba(167,196,241,0.7); }
+.ws-rect.color-green, .ws-ellipse.color-green { background: rgba(164,217,168,0.7); }
+.ws-rect.color-lilac, .ws-ellipse.color-lilac { background: rgba(182,168,232,0.7); }
+.ws-rect.color-cream, .ws-ellipse.color-cream { background: rgba(245,241,232,0.85); }
+.ws-rect.color-ink, .ws-ellipse.color-ink { background: rgba(26,26,26,0.85); }
 
 .ws-toolbar {
   position: absolute; left: calc(24px + var(--side-w) + 24px); top: 48px;
@@ -513,8 +760,31 @@ const css = `
   transition: background 0.1s ease, color 0.1s ease;
 }
 .ws-tool:hover { background: rgba(26,26,26,0.08); }
+.ws-tool:disabled { opacity: 0.35; cursor: not-allowed; }
 .ws-tool.is-active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 .ws-tool-sep { height: 1px; background: rgba(26,26,26,0.18); margin: 4px 4px; }
+
+.ws-props {
+  position: absolute; left: 50%; transform: translateX(-50%); top: 48px;
+  z-index: 3;
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 14px;
+  background: var(--cream); border: 2px solid var(--ink); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.ws-props-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--ink); }
+.ws-swatches { display: flex; gap: 6px; }
+.ws-swatch {
+  width: 22px; height: 22px; border-radius: 999px;
+  border: 2px solid var(--ink); cursor: pointer; padding: 0;
+}
+.ws-swatch.is-active { box-shadow: 0 0 0 2px var(--cream), 0 0 0 4px var(--ink); }
+.ws-props-del {
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em;
+  padding: 6px 10px; border: 1px solid var(--coral); border-radius: 8px;
+  background: var(--cream); color: var(--coral); cursor: pointer;
+}
+.ws-props-del:hover { background: var(--coral); color: var(--cream); }
 
 .ws-zoom {
   position: absolute; right: 24px; bottom: 48px;
@@ -533,10 +803,7 @@ const css = `
   color: var(--ink);
 }
 .ws-zoom-btn:hover { background: var(--ink); color: var(--cream); }
-.ws-zoom-val {
-  font-family: 'Space Mono', monospace; font-size: 11px;
-  letter-spacing: 0.1em; color: var(--ink);
-}
+.ws-zoom-val { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink); }
 .ws-zoom-fit {
   margin-top: 4px;
   padding: 6px 10px;
@@ -550,5 +817,6 @@ const css = `
 @media (max-width: 880px) {
   .ws-sidebar { position: relative; left: auto; top: auto; width: auto; margin: 16px clamp(16px,4vw,24px) 0; }
   .ws-canvas { min-height: 560px; }
+  .ws-toolbar { left: 24px; top: 12px; flex-direction: row; }
 }
 `;
