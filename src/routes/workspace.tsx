@@ -681,6 +681,13 @@ function WorkspacePage() {
                 }
                 if (it.type === "rect") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
                 if (it.type === "ellipse") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
+                if (it.type === "lobes") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown}>
+                      <LoberBrain />
+                    </div>
+                  );
+                }
                 if (it.type === "pdf") {
                   const handleFile = (file: File | undefined) => {
                     if (!file) return;
