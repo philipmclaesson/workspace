@@ -803,7 +803,7 @@ const css = `
   color: var(--ink);
 }
 .ws-zoom-btn:hover { background: var(--ink); color: var(--cream); }
-.ws-zoom-val { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink); }
+.ws-zoom-val { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink); display: inline-block; width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
 .ws-zoom-fit {
   margin-top: 4px;
   padding: 6px 10px;
