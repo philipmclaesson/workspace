@@ -23,6 +23,15 @@ const SECTIONS: { id: SectionId; label: string; hint: string }[] = [
   { id: "questions", label: "Frågor", hint: "06" },
 ];
 
+const MODULES: { id: string; label: string; hint: string }[] = [
+  { id: "biologisk", label: "Biologisk psykologi", hint: "01" },
+  { id: "kognitiv", label: "Kognitiv psykologi", hint: "02" },
+  { id: "utveckling", label: "Utvecklingspsykologi", hint: "03" },
+  { id: "personlighet", label: "Personlighetspsykologi", hint: "04" },
+  { id: "social", label: "Socialpsykologi", hint: "05" },
+  { id: "metod", label: "Metod & statistik", hint: "06" },
+];
+
 type Color = "yellow" | "pink" | "blue" | "green" | "lilac" | "cream" | "ink";
 const COLORS: Color[] = ["yellow", "pink", "blue", "green", "lilac", "cream", "ink"];
 const COLOR_HEX: Record<Color, string> = {
@@ -169,6 +178,7 @@ function WorkspacePage() {
   const [pan, setPan] = useState({ x: 40, y: 40 });
   const [sideCollapsed, setSideCollapsed] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [activeModule, setActiveModule] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
@@ -505,20 +515,43 @@ function WorkspacePage() {
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">{sideCollapsed ? <path d="M9 6l6 6-6 6"/> : <path d="M15 6l-6 6 6 6"/>}</svg>
           </button>
           {!sideCollapsed && <div className="ws-side-label">KURS</div>}
-          {!sideCollapsed && <h2 className="ws-side-title">Biologisk<br/>Psykologi</h2>}
-          <ul className="ws-side-list">
-            {SECTIONS.map(s => (
-              <li key={s.id}>
-                <button type="button" className={`ws-side-item ${active === s.id ? "is-active" : ""}`} onClick={() => setActive(s.id)} title={s.label}>
-                  <span className="ws-side-hint">{s.hint}</span>
-                  {!sideCollapsed && <span className="ws-side-name">{s.label}</span>}
+          {!sideCollapsed && <h2 className="ws-side-title">Psykologi</h2>}
+          {activeModule === null ? (
+            <>
+              <ul className="ws-side-list">
+                {MODULES.map(m => (
+                  <li key={m.id}>
+                    <button type="button" className="ws-side-item" onClick={() => setActiveModule(m.id)} title={m.label}>
+                      <span className="ws-side-hint">{m.hint}</span>
+                      {!sideCollapsed && <span className="ws-side-name">{m.label}</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button type="button" className="ws-side-add" title="Ny delkurs">{sideCollapsed ? "+" : "+ NY DELKURS"}</button>
+            </>
+          ) : (
+            <>
+              {!sideCollapsed && (
+                <button type="button" className="ws-side-back" onClick={() => setActiveModule(null)} title="Tillbaka till delkurser">
+                  ← {MODULES.find(m => m.id === activeModule)?.label}
                 </button>
-              </li>
-            ))}
-          </ul>
-          <button type="button" className="ws-side-add" title="Ny sektion">{sideCollapsed ? "+" : "+ NY SEKTION"}</button>
+              )}
+              <ul className="ws-side-list">
+                {SECTIONS.map(s => (
+                  <li key={s.id}>
+                    <button type="button" className={`ws-side-item ${active === s.id ? "is-active" : ""}`} onClick={() => setActive(s.id)} title={s.label}>
+                      <span className="ws-side-hint">{s.hint}</span>
+                      {!sideCollapsed && <span className="ws-side-name">{s.label}</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button type="button" className="ws-side-add" title="Ny sektion">{sideCollapsed ? "+" : "+ NY SEKTION"}</button>
+            </>
+          )}
 
-          {!sideCollapsed && (
+          {!sideCollapsed && activeModule !== null && (
             <>
               <div className="ws-side-divider" />
               <button type="button" className="ws-side-notes-btn" onClick={() => setShowNotes(v => !v)}>
