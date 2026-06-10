@@ -182,8 +182,6 @@ const css = `
   flex: 1;
   min-height: 0;
   margin-bottom: 24px;
-  border: 2px solid var(--ink);
-  border-radius: 14px;
   overflow: hidden;
   background: var(--cream);
 }
