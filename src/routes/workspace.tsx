@@ -406,6 +406,7 @@ function WorkspacePage() {
       else if (e.key === "r") setTool("rect");
       else if (e.key === "o") setTool("ellipse");
       else if (e.key === "c") setTool("connector");
+      else if (e.key === "b") setTool("lobes");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
