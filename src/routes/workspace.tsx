@@ -378,7 +378,7 @@ const css = `
   padding: 28px 0 28px calc(280px + 24px + 72px);
 }
 .ws-viewport {
-  position: absolute; inset: 0;
+  position: absolute; left: 0; right: 0; top: 24px; bottom: 24px;
   overflow: hidden;
   cursor: grab;
   user-select: none;
