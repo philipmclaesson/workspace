@@ -404,43 +404,9 @@ function WorkspacePage() {
           {!sideCollapsed && (
             <>
               <div className="ws-side-divider" />
-              <div className="ws-side-label">TEMPLATES</div>
-              <ul className="ws-side-templates">
-                {TEMPLATES.map(t => (
-                  <li key={t.id}>
-                    <button type="button" className="ws-template-card" onClick={t.insert} title={`Lägg in template: ${t.label}`}>
-                      <span className="ws-template-thumb" aria-hidden="true">
-                        <span className="ws-template-thumb-face" />
-                        <span className="ws-template-thumb-bar ws-tt-green" />
-                        <span className="ws-template-thumb-bar ws-tt-pink" />
-                        <span className="ws-template-thumb-bar ws-tt-yellow" />
-                      </span>
-                      <span className="ws-template-meta">
-                        <span className="ws-template-name">{t.label}</span>
-                        <span className="ws-template-desc">Profilkort + 4 noder</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <div className="ws-side-divider" />
               <button type="button" className="ws-side-notes-btn" onClick={() => setShowNotes(v => !v)}>
                 {showNotes ? "DÖLJ ANTECKNINGAR" : "VISA ANTECKNINGAR"}
               </button>
-            </>
-          )}
-          {sideCollapsed && (
-            <>
-              <div className="ws-side-divider" />
-              {TEMPLATES.map(t => (
-                <button key={t.id} type="button" className="ws-side-item" onClick={t.insert} title={t.label} style={{ padding: "8px 0", justifyContent: "center", fontSize: 12 }}>
-                  <span className="ws-side-hint">{t.hint}</span>
-                </button>
-              ))}
-            </>
-          )}
-          {!sideCollapsed && (
-            <>
               {showNotes && (
                 <textarea
                   className="ws-side-notes"
@@ -556,6 +522,18 @@ function WorkspacePage() {
             {TOOLS.map(t => (
               <button key={t.id} type="button" className={`ws-tool ${tool === t.id ? "is-active" : ""}`} onClick={() => { setTool(t.id); setPendingFrom(null); }} title={t.label} aria-label={t.label}>
                 {TOOL_ICONS[t.id]}
+              </button>
+            ))}
+            <div className="ws-tool-sep" />
+            <div className="ws-tool-label" title="Templates">TPL</div>
+            {TEMPLATES.map(t => (
+              <button key={t.id} type="button" className="ws-tool ws-tool-tpl" onClick={t.insert} title={`Template: ${t.label}`} aria-label={`Template: ${t.label}`}>
+                <span className="ws-tpl-mini" aria-hidden="true">
+                  <span className="ws-tpl-mini-face" />
+                  <span className="ws-tpl-mini-bar b1" />
+                  <span className="ws-tpl-mini-bar b2" />
+                  <span className="ws-tpl-mini-bar b3" />
+                </span>
               </button>
             ))}
             <div className="ws-tool-sep" />
@@ -937,6 +915,26 @@ const css = `
 .ws-tool:disabled { opacity: 0.35; cursor: not-allowed; }
 .ws-tool.is-active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 .ws-tool-sep { height: 1px; background: rgba(26,26,26,0.18); margin: 4px 4px; }
+.ws-tool-label {
+  font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.18em;
+  color: rgba(26,26,26,0.55); text-align: center; padding: 2px 0;
+}
+.ws-tool-tpl { position: relative; }
+.ws-tpl-mini {
+  position: relative; width: 22px; height: 22px;
+  border: 1.5px solid currentColor; border-radius: 4px; display: block;
+  background: transparent;
+}
+.ws-tpl-mini-face {
+  position: absolute; left: 2px; top: 2px; width: 7px; height: 7px;
+  border-radius: 999px; background: currentColor; opacity: 0.7;
+}
+.ws-tpl-mini-bar {
+  position: absolute; right: 2px; height: 2px; border-radius: 1px; background: currentColor; opacity: 0.7;
+}
+.ws-tpl-mini-bar.b1 { top: 3px;  width: 9px; }
+.ws-tpl-mini-bar.b2 { top: 8px;  width: 11px; }
+.ws-tpl-mini-bar.b3 { top: 13px; width: 7px; }
 
 .ws-props {
   position: absolute; left: 50%; transform: translateX(-50%); top: 48px;
@@ -977,7 +975,11 @@ const css = `
   color: var(--ink);
 }
 .ws-zoom-btn:hover { background: var(--ink); color: var(--cream); }
-.ws-zoom-val { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink); display: inline-block; width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+.ws-zoom-val {
+  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0;
+  color: var(--ink); display: inline-block; width: 36px; text-align: center;
+  font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden;
+}
 .ws-zoom-fit {
   margin-top: 4px;
   padding: 6px 10px;
