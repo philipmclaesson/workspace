@@ -254,7 +254,6 @@ const moduleCss = `
   align-items: center;
   justify-content: space-between;
   padding: 22px 0 6px;
-  border-bottom: 2px solid var(--ink);
 }
 .brk-logo {
   display: inline-flex;

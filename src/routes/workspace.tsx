@@ -735,7 +735,6 @@ const css = `
 .ws-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 22px 0 10px;
-  border-bottom: 2px solid var(--ink);
 }
 .ws-logo {
   display: inline-flex;

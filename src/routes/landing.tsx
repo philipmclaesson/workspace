@@ -34,7 +34,6 @@ function LandingPage() {
       </header>
 
       <section className="lp-hero">
-        <span className="lp-eyebrow">March Madness 2026</span>
         <h1 className="lp-title">
           BUILD BETTER
           <br />
@@ -87,7 +86,6 @@ const css = `
   align-items: center;
   justify-content: space-between;
   padding: 22px 0 6px;
-  border-bottom: 2px solid var(--ink);
   flex-shrink: 0;
 }
 .lp-logo {
@@ -127,9 +125,10 @@ const css = `
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
   gap: clamp(16px, 2.5vh, 28px);
   max-width: 980px;
+  padding-top: clamp(40px, 10vh, 120px);
   padding-bottom: 4vh;
   min-height: 0;
 }
