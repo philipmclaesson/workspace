@@ -353,18 +353,55 @@ const css = `
 .ws-node-e p { color: rgba(245,241,232,0.8); }
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
-.ws-add-node {
-  position: absolute; right: 24px; bottom: 24px;
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 14px 22px;
-  border: 2px solid var(--ink); border-radius: 999px;
-  background: #4ec07a; color: #0a2a14;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 14px;
-  cursor: pointer;
-  box-shadow: 5px 5px 0 var(--ink);
+.ws-toolbar {
+  position: absolute; left: 18px; top: 18px;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 6px;
+  background: var(--ink); border: 2px solid var(--ink); border-radius: 16px;
+  box-shadow: 4px 4px 0 rgba(26,26,26,0.25);
+  z-index: 3;
 }
-.ws-add-node:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 var(--ink); }
+.ws-tool {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: 10px;
+  background: transparent; color: var(--cream); cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+.ws-tool:hover { background: rgba(245,241,232,0.12); }
+.ws-tool.is-active { background: var(--cream); color: var(--ink); border-color: var(--cream); }
+.ws-tool-sep { height: 1px; background: rgba(245,241,232,0.2); margin: 4px 4px; }
+
+.ws-zoom {
+  position: absolute; right: 22px; bottom: 22px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 8px;
+  background: var(--cream);
+  border: 2px solid var(--ink); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  z-index: 3;
+}
+.ws-zoom-btn {
+  width: 34px; height: 30px;
+  border: 1px solid var(--ink); border-radius: 8px;
+  background: var(--cream); cursor: pointer;
+  font-family: 'Space Mono', monospace; font-size: 16px; line-height: 1;
+  color: var(--ink);
+}
+.ws-zoom-btn:hover { background: var(--ink); color: var(--cream); }
+.ws-zoom-val {
+  font-family: 'Space Mono', monospace; font-size: 11px;
+  letter-spacing: 0.1em; color: var(--ink);
+}
+.ws-zoom-fit {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--ink); border-radius: 8px;
+  background: var(--cream); cursor: pointer;
+  font-family: 'Space Mono', monospace; font-size: 11px;
+  letter-spacing: 0.15em; color: var(--ink);
+}
+.ws-zoom-fit:hover { background: var(--ink); color: var(--cream); }
 
 @media (max-width: 880px) {
   .ws-shell { grid-template-columns: 1fr; }
