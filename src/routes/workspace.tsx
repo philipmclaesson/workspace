@@ -47,6 +47,7 @@ function WorkspacePage() {
   const [tool, setTool] = useState<string>("select");
   const [pan, setPan] = useState({ x: 40, y: 40 });
   const [nodes, setNodes] = useState<WsNode[]>(INITIAL_NODES);
+  const [sideCollapsed, setSideCollapsed] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<
     | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
@@ -172,10 +173,23 @@ function WorkspacePage() {
         </nav>
       </header>
 
-      <div className="ws-shell">
-        <aside className="ws-sidebar">
-          <div className="ws-side-label">KURS</div>
-          <h2 className="ws-side-title">Biologisk<br/>Psykologi</h2>
+      <div className={`ws-shell ${sideCollapsed ? "is-collapsed" : ""}`}>
+        <aside className={`ws-sidebar ${sideCollapsed ? "is-collapsed" : ""}`}>
+          <button
+            type="button"
+            className="ws-side-toggle"
+            onClick={() => setSideCollapsed((v) => !v)}
+            aria-label={sideCollapsed ? "Fäll ut" : "Fäll in"}
+            title={sideCollapsed ? "Fäll ut" : "Fäll in"}
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+              {sideCollapsed
+                ? <path d="M9 6l6 6-6 6" />
+                : <path d="M15 6l-6 6 6 6" />}
+            </svg>
+          </button>
+          {!sideCollapsed && <div className="ws-side-label">KURS</div>}
+          {!sideCollapsed && <h2 className="ws-side-title">Biologisk<br/>Psykologi</h2>}
           <ul className="ws-side-list">
             {SECTIONS.map((s) => (
               <li key={s.id}>
@@ -183,14 +197,17 @@ function WorkspacePage() {
                   type="button"
                   className={`ws-side-item ${active === s.id ? "is-active" : ""}`}
                   onClick={() => setActive(s.id)}
+                  title={s.label}
                 >
                   <span className="ws-side-hint">{s.hint}</span>
-                  <span className="ws-side-name">{s.label}</span>
+                  {!sideCollapsed && <span className="ws-side-name">{s.label}</span>}
                 </button>
               </li>
             ))}
           </ul>
-          <button type="button" className="ws-side-add">+ NY SEKTION</button>
+          <button type="button" className="ws-side-add" title="Ny sektion">
+            {sideCollapsed ? "+" : "+ NY SEKTION"}
+          </button>
         </aside>
 
         <section className="ws-canvas">
