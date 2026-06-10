@@ -26,6 +26,7 @@ function LandingPage() {
         <nav className="lp-nav">
           <a href="/">Bracket</a>
           <a href="/hjarna">Hjärna</a>
+          <a href="/workspace">Workspace</a>
           <a href="#login" className="lp-nav-login">Login</a>
         </nav>
       </header>
