@@ -528,7 +528,6 @@ function WorkspacePage() {
                   </li>
                 ))}
               </ul>
-              <button type="button" className="ws-side-add" title="Ny delkurs">{sideCollapsed ? "+" : "+ NY DELKURS"}</button>
             </>
           ) : (
             <>
@@ -547,24 +546,6 @@ function WorkspacePage() {
                   </li>
                 ))}
               </ul>
-              <button type="button" className="ws-side-add" title="Ny sektion">{sideCollapsed ? "+" : "+ NY SEKTION"}</button>
-            </>
-          )}
-
-          {!sideCollapsed && activeModule !== null && (
-            <>
-              <div className="ws-side-divider" />
-              <button type="button" className="ws-side-notes-btn" onClick={() => setShowNotes(v => !v)}>
-                {showNotes ? "DÖLJ ANTECKNINGAR" : "VISA ANTECKNINGAR"}
-              </button>
-              {showNotes && (
-                <textarea
-                  className="ws-side-notes"
-                  placeholder={`Anteckningar för ${SECTIONS.find(s => s.id === active)?.label}…`}
-                  value={notes[active]}
-                  onChange={(e) => setNotes(n => ({ ...n, [active]: e.target.value }))}
-                />
-              )}
             </>
           )}
         </aside>
@@ -819,7 +800,8 @@ const css = `
   max-height: calc(100vh - 120px);
   overflow: auto;
 }
-.ws-sidebar.is-collapsed { padding: 8px 6px; }
+.ws-sidebar.is-collapsed { padding: 44px 6px 8px; }
+.ws-sidebar.is-collapsed .ws-side-toggle { z-index: 5; }
 .ws-side-toggle {
   position: absolute; top: 8px; right: 8px;
   width: 26px; height: 26px;
