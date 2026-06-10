@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as LandingRouteImport } from './routes/landing'
+import { Route as EkosystemRouteImport } from './routes/ekosystem'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
@@ -22,6 +23,11 @@ const WorkspaceRoute = WorkspaceRouteImport.update({
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EkosystemRoute = EkosystemRouteImport.update({
+  id: '/ekosystem',
+  path: '/ekosystem',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,12 +43,14 @@ const ApiChatRoute = ApiChatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
   '/api/chat': typeof ApiChatRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/landing' | '/workspace' | '/api/chat'
+  fullPaths: '/' | '/ekosystem' | '/landing' | '/workspace' | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/landing' | '/workspace' | '/api/chat'
-  id: '__root__' | '/' | '/landing' | '/workspace' | '/api/chat'
+  to: '/' | '/ekosystem' | '/landing' | '/workspace' | '/api/chat'
+  id: '__root__' | '/' | '/ekosystem' | '/landing' | '/workspace' | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EkosystemRoute: typeof EkosystemRoute
   LandingRoute: typeof LandingRoute
   WorkspaceRoute: typeof WorkspaceRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -85,6 +95,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ekosystem': {
+      id: '/ekosystem'
+      path: '/ekosystem'
+      fullPath: '/ekosystem'
+      preLoaderRoute: typeof EkosystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EkosystemRoute: EkosystemRoute,
   LandingRoute: LandingRoute,
   WorkspaceRoute: WorkspaceRoute,
   ApiChatRoute: ApiChatRoute,
