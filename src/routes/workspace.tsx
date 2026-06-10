@@ -146,6 +146,8 @@ function WorkspacePage() {
     Object.fromEntries(MODULES.map(m => [m.id, m.id === "biologisk" ? INITIAL_ITEMS : []]))
   );
   const histRef = useRef<Record<string, { past: Item[][]; future: Item[][] }>>({});
+  const activeModuleRef = useRef<string | null>(null);
+  useEffect(() => { activeModuleRef.current = activeModule; }, [activeModule]);
   const getHist = (mod: string) => {
     if (!histRef.current[mod]) histRef.current[mod] = { past: [], future: [] };
     return histRef.current[mod];
@@ -332,9 +334,13 @@ function WorkspacePage() {
     const onUp = () => {
       const d = dragRef.current;
       if (d?.type === "move") {
-        histRef.current.past.push(d.snapshot);
-        if (histRef.current.past.length > 80) histRef.current.past.shift();
-        histRef.current.future = [];
+        const mod = activeModuleRef.current;
+        if (mod) {
+          const h = getHist(mod);
+          h.past.push(d.snapshot);
+          if (h.past.length > 80) h.past.shift();
+          h.future = [];
+        }
       }
       dragRef.current = null;
       document.body.style.cursor = "";
