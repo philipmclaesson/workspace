@@ -261,9 +261,10 @@ const moduleCss = `
   align-items: center;
   text-decoration: none;
   line-height: 0;
+  padding-bottom: 14px;
 }
 .brk-logo-img {
-  height: clamp(34px, 4.4vw, 52px);
+  height: clamp(30px, 3.8vw, 44px);
   width: auto;
   display: block;
 }
