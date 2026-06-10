@@ -143,6 +143,7 @@ type DragState =
   | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
   | { type: "move"; startX: number; startY: number; ids: string[]; origs: Record<string, { x: number; y: number }>; scale: number; snapshot: Item[] }
   | { type: "rewire"; connId: string; end: "from" | "to"; snapshot: Item[] }
+  | { type: "link"; fromId: string; snapshot: Item[] }
   | null;
 
 function WorkspacePage() {
@@ -256,6 +257,9 @@ function WorkspacePage() {
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
   const [rewireGhost, setRewireGhost] = useState<{ x: number; y: number; hoverId: string | null } | null>(null);
   useEffect(() => { rewireGhostRef.current = rewireGhost; }, [rewireGhost]);
+  const [linkGhost, setLinkGhost] = useState<{ x: number; y: number; hoverId: string | null } | null>(null);
+  const linkGhostRef = useRef<{ x: number; y: number; hoverId: string | null } | null>(null);
+  useEffect(() => { linkGhostRef.current = linkGhost; }, [linkGhost]);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState>(null);
@@ -394,6 +398,21 @@ function WorkspacePage() {
           if (wx >= it.x && wx <= it.x + it.w && wy >= it.y && wy <= it.y + it.h) { hover = it.id; break; }
         }
         setRewireGhost({ x: wx, y: wy, hoverId: hover });
+      } else if (d.type === "link") {
+        const rect = viewportRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const wx = (e.clientX - rect.left - pan.x) / scale;
+        const wy = (e.clientY - rect.top - pan.y) / scale;
+        const mod = activeModuleRef.current;
+        const cur = mod ? (itemsByModuleRef.current[mod] ?? []) : [];
+        let hover: string | null = null;
+        for (let i = cur.length - 1; i >= 0; i--) {
+          const it = cur[i];
+          if (it.type === "connector") continue;
+          if (it.id === d.fromId) continue;
+          if (wx >= it.x && wx <= it.x + it.w && wy >= it.y && wy <= it.y + it.h) { hover = it.id; break; }
+        }
+        setLinkGhost({ x: wx, y: wy, hoverId: hover });
       }
     };
     const onUp = () => {
@@ -427,6 +446,26 @@ function WorkspacePage() {
           });
         }
         setRewireGhost(null);
+      }
+      if (d?.type === "link") {
+        const ghost = linkGhostRef.current;
+        const mod = activeModuleRef.current;
+        if (mod && ghost && ghost.hoverId && ghost.hoverId !== d.fromId) {
+          const target = ghost.hoverId;
+          const fromId = d.fromId;
+          setItemsByModule(prev => {
+            const cur = prev[mod] ?? [];
+            const exists = cur.some(it => it.type === "connector" && ((it.from === fromId && it.to === target) || (it.from === target && it.to === fromId)));
+            if (exists) return prev;
+            const newConn: ConnectorItem = { id: uid(), type: "connector", from: fromId, to: target, color: "ink" };
+            const h = getHist(mod);
+            h.past.push(d.snapshot);
+            if (h.past.length > 80) h.past.shift();
+            h.future = [];
+            return { ...prev, [mod]: [...cur, newConn] };
+          });
+        }
+        setLinkGhost(null);
       }
       dragRef.current = null;
       document.body.style.cursor = "";
@@ -769,6 +808,51 @@ function WorkspacePage() {
                     </g>
                   );
                 })}
+                {/* Link handles on selected non-connector item */}
+                {(() => {
+                  if (!selectedItem || selectedItem.type === "connector") return null;
+                  const it = selectedItem;
+                  const cxX = it.x + it.w / 2 + 2000;
+                  const cxY = it.y + it.h / 2 + 2000;
+                  const handles: { x: number; y: number; key: string }[] = [
+                    { key: "t", x: cxX, y: it.y + 2000 - 2 },
+                    { key: "r", x: it.x + it.w + 2000 + 2, y: cxY },
+                    { key: "b", x: cxX, y: it.y + it.h + 2000 + 2 },
+                    { key: "l", x: it.x + 2000 - 2, y: cxY },
+                  ];
+                  const startLink = (e: React.MouseEvent, hx: number, hy: number) => {
+                    e.stopPropagation();
+                    dragRef.current = { type: "link", fromId: it.id, snapshot: items };
+                    setLinkGhost({ x: hx - 2000, y: hy - 2000, hoverId: null });
+                    document.body.style.cursor = "grabbing";
+                  };
+                  return (
+                    <g>
+                      {handles.map(h => (
+                        <g key={h.key} style={{ pointerEvents: "all", cursor: "crosshair" }} onMouseDown={(e) => startLink(e, h.x, h.y)}>
+                          <circle cx={h.x} cy={h.y} r={9} fill="#fff" stroke="#3f8f81" strokeWidth={2} />
+                          <path d={`M ${h.x - 3} ${h.y} L ${h.x + 3} ${h.y} M ${h.x} ${h.y - 3} L ${h.x} ${h.y + 3}`} stroke="#3f8f81" strokeWidth={2} strokeLinecap="round" />
+                        </g>
+                      ))}
+                    </g>
+                  );
+                })()}
+                {/* Ghost link line during link drag */}
+                {linkGhost && dragRef.current?.type === "link" && (() => {
+                  const from = itemsMap.get(dragRef.current.fromId);
+                  if (!from || from.type === "connector") return null;
+                  const ax = from.x + from.w / 2 + 2000;
+                  const ay = from.y + from.h / 2 + 2000;
+                  const bx = linkGhost.x + 2000;
+                  const by = linkGhost.y + 2000;
+                  const cx = (ax + bx) / 2;
+                  return (
+                    <g style={{ pointerEvents: "none" }}>
+                      <path d={`M ${ax} ${ay} C ${cx} ${ay}, ${cx} ${by}, ${bx} ${by}`} fill="none" stroke="#3f8f81" strokeWidth={2} strokeDasharray="5 4" />
+                      {linkGhost.hoverId && <circle cx={bx} cy={by} r={10} fill="none" stroke="#3f8f81" strokeWidth={2} />}
+                    </g>
+                  );
+                })()}
               </svg>
               {items.filter(isShape).map(it => {
                 const sel = selected.includes(it.id);
