@@ -1,4 +1,15 @@
 import type { ReactNode } from "react";
+import favoLogo from "@/assets/favo-logo.png.asset.json";
+
+/**
+ * Site logo. Swap this single constant (or replace the asset JSON file
+ * at src/assets/favo-logo.png.asset.json) to change the header brand
+ * across the whole site.
+ */
+const SITE_LOGO = {
+  src: favoLogo.url,
+  alt: "FAVO",
+};
 
 /**
  * Bracket — March Madness predictions landing page.
@@ -28,12 +39,13 @@ export function BracketLandingPage() {
       <style>{moduleCss}</style>
 
       <header className="brk-header">
-        <a href="/landing" className="brk-logo">BRACKET</a>
+        <a href="/landing" className="brk-logo" aria-label={SITE_LOGO.alt}>
+          <img src={SITE_LOGO.src} alt={SITE_LOGO.alt} className="brk-logo-img" />
+        </a>
         <nav className="brk-nav">
           <a href="#scoring">Scoring</a>
           <a href="#features">Features</a>
           <a href="#groups">Groups</a>
-          <a href="/hjarna">Hjärna</a>
           <a href="#login" className="brk-nav-login">Login</a>
         </nav>
       </header>
@@ -245,12 +257,15 @@ const moduleCss = `
   border-bottom: 2px solid var(--ink);
 }
 .brk-logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(34px, 5vw, 54px);
-  letter-spacing: 0.04em;
-  color: var(--green);
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  text-shadow: 2px 2px 0 rgba(26,26,26,0.12);
+  line-height: 0;
+}
+.brk-logo-img {
+  height: clamp(34px, 4.4vw, 52px);
+  width: auto;
+  display: block;
 }
 .brk-nav {
   display: flex;
