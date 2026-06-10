@@ -1477,7 +1477,14 @@ const css = `
 }
 .ws-pdf-name { flex: 1; min-width: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-pdf-open { font-family: 'Space Mono', monospace; font-size: 11px; color: inherit; text-decoration: underline; cursor: pointer; }
-.ws-pdf-frame { flex: 1; width: 100%; min-height: 0; border: 1.5px solid var(--ink); border-radius: 8px; background: #efece2; }
+.ws-pdf-preview {
+  flex: 1; width: 100%; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border: 1.5px solid var(--ink); border-radius: 8px; background: #efece2;
+  color: var(--ink); cursor: pointer;
+}
+.ws-pdf-preview:hover { background: #e6e2d3; }
+.ws-pdf-preview-cta { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; }
 .ws-pdf-fallback { display: grid; place-items: center; width: 100%; height: 100%; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink); opacity: 0.6; }
 .ws-pdf-drop {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
@@ -1488,4 +1495,32 @@ const css = `
 .ws-pdf-cta { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.04em; }
 .ws-pdf-hint { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; opacity: 0.65; text-transform: uppercase; }
 .ws-pdf-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+
+.ws-pdf-viewer {
+  position: absolute; top: 48px; right: 24px; bottom: 48px; left: 24px;
+  background: var(--cream);
+  border: 2px solid var(--ink); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  display: flex; flex-direction: column;
+  z-index: 7;
+  transform: translateY(20px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s ease, opacity 0.18s ease;
+}
+.ws-pdf-viewer.is-open { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+.ws-pdf-viewer-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; border-bottom: 2px solid var(--ink);
+}
+.ws-pdf-viewer-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.22em; color: var(--coral); }
+.ws-pdf-viewer-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; line-height: 1; margin: 4px 0 0; letter-spacing: 0.02em; max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-pdf-viewer-actions { display: flex; align-items: center; gap: 10px; }
+.ws-pdf-viewer-link {
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 6px 10px; border: 1.5px solid var(--ink); border-radius: 10px;
+  color: var(--ink); text-decoration: none; background: var(--cream); box-shadow: 2px 2px 0 var(--ink);
+}
+.ws-pdf-viewer-link:hover { background: var(--ink); color: var(--cream); }
+.ws-pdf-viewer-frame { flex: 1; width: 100%; min-height: 0; border: 0; background: #efece2; border-radius: 0 0 12px 12px; }
 `;
