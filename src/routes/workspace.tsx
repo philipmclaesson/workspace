@@ -42,7 +42,9 @@ type NodeItem = Base & { type: "node"; tag: string; title: string; body: string 
 type RectItem = Base & { type: "rect" };
 type EllipseItem = Base & { type: "ellipse" };
 type ConnectorItem = { id: string; type: "connector"; from: string; to: string; color: Color };
-type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem;
+type ProfileStat = { label: string; value: string; color: Color };
+type ProfileItem = Base & { type: "profile"; name: string; role: string; stats: ProfileStat[] };
+type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem | ProfileItem;
 
 const INITIAL_ITEMS: Item[] = [
   { id: "n1", type: "node", x: 60, y: 80, w: 220, h: 100, color: "pink", tag: "NEURON", title: "Aktionspotential", body: "Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV." },
@@ -55,7 +57,7 @@ const INITIAL_ITEMS: Item[] = [
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem => it.type !== "connector";
+const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem => it.type !== "connector";
 
 type DragState =
   | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
