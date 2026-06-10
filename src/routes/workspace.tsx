@@ -351,7 +351,7 @@ const css = `
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
 .ws-toolbar {
-  position: absolute; left: 18px; top: 18px;
+  position: absolute; left: calc(clamp(20px, 4vw, 48px) + 280px + 16px); top: 24px;
   display: flex; flex-direction: column; gap: 6px;
   padding: 8px 6px;
   background: var(--ink); border: 2px solid var(--ink); border-radius: 16px;
