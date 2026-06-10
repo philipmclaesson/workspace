@@ -489,7 +489,7 @@ function WorkspacePage() {
       <style>{css}</style>
 
       <header className="ws-header">
-        <a href="/" className="ws-logo" aria-label="FAVO">
+        <a href="/landing" className="ws-logo" aria-label="FAVO">
           <img src="/__l5e/assets-v1/ac7e7e14-74c2-45d0-91ec-e344a34cd64d/favo-logo.png" alt="FAVO" className="ws-logo-img" />
         </a>
         <nav className="ws-nav">
