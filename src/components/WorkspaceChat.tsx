@@ -12,16 +12,47 @@ type Props = {
 
 const transport = new DefaultChatTransport({ api: "/api/chat" });
 
+const storageKey = (id: string) => `ws-chat:${id}`;
+const loadMessages = (id: string): UIMessage[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(storageKey(id));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as UIMessage[]) : [];
+  } catch {
+    return [];
+  }
+};
+
 export function WorkspaceChat({ open, onClose, moduleId, moduleLabel }: Props) {
   const chatId = moduleId ?? "default";
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, sendMessage, setMessages, status, error } = useChat({
     id: chatId,
     transport,
+    messages: loadMessages(chatId),
   });
+
+  // Re-hydrate when switching modules
+  useEffect(() => {
+    setMessages(loadMessages(chatId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId]);
+
+  // Persist whenever messages change (and not mid-stream-only — save always is fine)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (status === "streaming" || status === "submitted") return;
+    try {
+      window.localStorage.setItem(storageKey(chatId), JSON.stringify(messages));
+    } catch {
+      // ignore quota errors
+    }
+  }, [messages, status, chatId]);
 
   useEffect(() => {
     if (scrollRef.current) {
