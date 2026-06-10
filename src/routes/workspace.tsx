@@ -47,6 +47,7 @@ function WorkspacePage() {
   const [tool, setTool] = useState<string>("select");
   const [pan, setPan] = useState({ x: 40, y: 40 });
   const [nodes, setNodes] = useState<WsNode[]>(INITIAL_NODES);
+  const [sideCollapsed, setSideCollapsed] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<
     | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
@@ -172,10 +173,23 @@ function WorkspacePage() {
         </nav>
       </header>
 
-      <div className="ws-shell">
-        <aside className="ws-sidebar">
-          <div className="ws-side-label">KURS</div>
-          <h2 className="ws-side-title">Biologisk<br/>Psykologi</h2>
+      <div className={`ws-shell ${sideCollapsed ? "is-collapsed" : ""}`}>
+        <aside className={`ws-sidebar ${sideCollapsed ? "is-collapsed" : ""}`}>
+          <button
+            type="button"
+            className="ws-side-toggle"
+            onClick={() => setSideCollapsed((v) => !v)}
+            aria-label={sideCollapsed ? "Fäll ut" : "Fäll in"}
+            title={sideCollapsed ? "Fäll ut" : "Fäll in"}
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+              {sideCollapsed
+                ? <path d="M9 6l6 6-6 6" />
+                : <path d="M15 6l-6 6 6 6" />}
+            </svg>
+          </button>
+          {!sideCollapsed && <div className="ws-side-label">KURS</div>}
+          {!sideCollapsed && <h2 className="ws-side-title">Biologisk<br/>Psykologi</h2>}
           <ul className="ws-side-list">
             {SECTIONS.map((s) => (
               <li key={s.id}>
@@ -183,14 +197,17 @@ function WorkspacePage() {
                   type="button"
                   className={`ws-side-item ${active === s.id ? "is-active" : ""}`}
                   onClick={() => setActive(s.id)}
+                  title={s.label}
                 >
                   <span className="ws-side-hint">{s.hint}</span>
-                  <span className="ws-side-name">{s.label}</span>
+                  {!sideCollapsed && <span className="ws-side-name">{s.label}</span>}
                 </button>
               </li>
             ))}
           </ul>
-          <button type="button" className="ws-side-add">+ NY SEKTION</button>
+          <button type="button" className="ws-side-add" title="Ny sektion">
+            {sideCollapsed ? "+" : "+ NY SEKTION"}
+          </button>
         </aside>
 
         <section className="ws-canvas">
@@ -321,20 +338,33 @@ const css = `
   padding: 0;
   flex: 1;
   min-height: 0;
+  --side-w: 280px;
 }
+.ws-shell.is-collapsed { --side-w: 56px; }
 
 .ws-sidebar {
   position: absolute;
   top: 24px;
   left: 24px;
-  width: 280px;
+  width: var(--side-w);
   z-index: 4;
   background: var(--cream);
   border: 2px solid var(--ink);
   border-radius: 14px;
   box-shadow: 4px 4px 0 var(--ink);
   padding: 22px 18px;
+  transition: width 0.18s ease, padding 0.18s ease;
 }
+.ws-sidebar.is-collapsed { padding: 8px 6px; }
+.ws-side-toggle {
+  position: absolute; top: -10px; right: -10px;
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border: 2px solid var(--ink); border-radius: 999px;
+  background: var(--cream); color: var(--ink); cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.ws-side-toggle:hover { background: var(--ink); color: var(--cream); }
 .ws-side-label {
   font-family: 'Space Mono', monospace;
   font-size: 11px; letter-spacing: 0.2em; color: var(--coral);
@@ -357,6 +387,18 @@ const css = `
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
   box-shadow: 3px 3px 0 var(--ink);
+}
+.ws-sidebar.is-collapsed .ws-side-item {
+  padding: 8px 0;
+  justify-content: center;
+  gap: 0;
+  font-size: 12px;
+}
+.ws-sidebar.is-collapsed .ws-side-hint { opacity: 1; }
+.ws-sidebar.is-collapsed .ws-side-add {
+  padding: 8px 0;
+  font-size: 16px;
+  border-style: solid;
 }
 .ws-side-item:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
 .ws-side-item.is-active { background: var(--green); color: #f5f1e8; }
@@ -455,12 +497,13 @@ const css = `
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
 .ws-toolbar {
-  position: absolute; left: calc(24px + 280px + 16px); top: 24px;
+  position: absolute; left: calc(24px + var(--side-w) + 16px); top: 24px;
   display: flex; flex-direction: column; gap: 6px;
   padding: 8px 6px;
   background: var(--cream); border: 2px solid var(--ink); border-radius: 14px;
   box-shadow: 4px 4px 0 var(--ink);
   z-index: 3;
+  transition: left 0.18s ease;
 }
 .ws-tool {
   width: 36px; height: 36px;
