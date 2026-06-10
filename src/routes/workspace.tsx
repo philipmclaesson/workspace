@@ -333,10 +333,18 @@ function WorkspacePage() {
         setPan({ x: d.origPan.x + dx, y: d.origPan.y + dy });
       } else {
         const s = d.scale;
-        setItemsRaw(prev => prev.map(it => {
-          if (it.type === "connector" || !d.origs[it.id]) return it;
-          return { ...it, x: d.origs[it.id].x + dx / s, y: d.origs[it.id].y + dy / s };
-        }));
+        const mod = activeModuleRef.current;
+        if (!mod) return;
+        setItemsByModule(prev => {
+          const cur = prev[mod] ?? [];
+          return {
+            ...prev,
+            [mod]: cur.map(it => {
+              if (it.type === "connector" || !d.origs[it.id]) return it;
+              return { ...it, x: d.origs[it.id].x + dx / s, y: d.origs[it.id].y + dy / s };
+            }),
+          };
+        });
       }
     };
     const onUp = () => {
