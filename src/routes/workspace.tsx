@@ -528,6 +528,25 @@ function WorkspacePage() {
                 }
                 if (it.type === "rect") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
                 if (it.type === "ellipse") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
+                if (it.type === "profile") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} onDoubleClick={onDouble}>
+                      <div className="ws-profile-tag">{it.role}</div>
+                      <div className="ws-profile-avatar" aria-hidden="true">
+                        <svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="24" r="12" fill="#1a1a1a" opacity="0.18"/><path d="M8 60c0-13 11-22 24-22s24 9 24 22" fill="#1a1a1a" opacity="0.18"/></svg>
+                      </div>
+                      <div className="ws-profile-name">{it.name}</div>
+                      <ul className="ws-profile-stats">
+                        {it.stats.map((s, i) => (
+                          <li key={i} className={`ws-profile-stat color-${s.color}`}>
+                            <span className="ws-profile-stat-label">{s.label}</span>
+                            <span className="ws-profile-stat-value">{s.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
                 return null;
               })}
             </div>
