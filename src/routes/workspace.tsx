@@ -674,6 +674,46 @@ function WorkspacePage() {
                 }
                 if (it.type === "rect") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
                 if (it.type === "ellipse") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
+                if (it.type === "pdf") {
+                  const handleFile = (file: File | undefined) => {
+                    if (!file) return;
+                    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) return;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const dataUrl = String(reader.result || "");
+                      updateItem(it.id, { name: file.name, dataUrl } as Partial<Item>);
+                    };
+                    reader.readAsDataURL(file);
+                  };
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown}>
+                      {it.dataUrl ? (
+                        <>
+                          <div className="ws-pdf-head">
+                            <span className="ws-pdf-tag">PDF</span>
+                            <span className="ws-pdf-name" title={it.name}>{it.name}</span>
+                            <a className="ws-pdf-open" href={it.dataUrl} target="_blank" rel="noreferrer" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>Öppna</a>
+                          </div>
+                          <object className="ws-pdf-frame" data={it.dataUrl} type="application/pdf" aria-label={it.name}>
+                            <div className="ws-pdf-fallback">Förhandsvisning ej tillgänglig</div>
+                          </object>
+                        </>
+                      ) : (
+                        <label className="ws-pdf-drop" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                          <span className="ws-pdf-tag">PDF</span>
+                          <span className="ws-pdf-cta">Välj PDF-fil</span>
+                          <span className="ws-pdf-hint">eller släpp filen här</span>
+                          <input
+                            type="file"
+                            accept="application/pdf,.pdf"
+                            className="ws-pdf-input"
+                            onChange={(e) => handleFile(e.target.files?.[0])}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  );
+                }
                 if (it.type === "profile") {
                   return (
                     <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} onDoubleClick={onDouble}>
