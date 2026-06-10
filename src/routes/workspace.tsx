@@ -1410,4 +1410,39 @@ const css = `
 }
 .ws-chat-send:hover:not(:disabled) { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
 .ws-chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ws-pdf {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  overflow: hidden;
+}
+.ws-pdf.color-yellow { background: #f5d76e; }
+.ws-pdf.color-pink { background: #f1a7b0; }
+.ws-pdf.color-blue { background: #a7c4f1; }
+.ws-pdf.color-green { background: #a4d9a8; }
+.ws-pdf.color-lilac { background: #b6a8e8; }
+.ws-pdf.color-cream { background: #f5f1e8; }
+.ws-pdf.color-ink { background: #1a1a1a; color: #f5f1e8; }
+.ws-pdf-head { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
+.ws-pdf-tag {
+  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em;
+  padding: 2px 8px; border: 1px solid currentColor; border-radius: 999px;
+}
+.ws-pdf-name { flex: 1; min-width: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-pdf-open { font-family: 'Space Mono', monospace; font-size: 11px; color: inherit; text-decoration: underline; cursor: pointer; }
+.ws-pdf-frame { flex: 1; width: 100%; min-height: 0; border: 1.5px solid var(--ink); border-radius: 8px; background: #efece2; }
+.ws-pdf-fallback { display: grid; place-items: center; width: 100%; height: 100%; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink); opacity: 0.6; }
+.ws-pdf-drop {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border: 2px dashed var(--ink); border-radius: 10px; padding: 18px 12px; cursor: pointer;
+  text-align: center;
+}
+.ws-pdf-drop:hover { background: rgba(26,26,26,0.04); }
+.ws-pdf-cta { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.04em; }
+.ws-pdf-hint { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; opacity: 0.65; text-transform: uppercase; }
+.ws-pdf-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
 `;
