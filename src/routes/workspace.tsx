@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceChat } from "@/components/WorkspaceChat";
+import LoberBrain from "@/components/LoberBrain";
 
 export const Route = createFileRoute("/workspace")({
   head: () => ({
@@ -56,7 +57,8 @@ type ProfileStat = { label: string; value: string; color: Color };
 type ProfileItem = Base & { type: "profile"; name: string; role: string; stats: ProfileStat[] };
 type BrainItem = Base & { type: "brain"; title: string; subtitle: string; highlights: { id: string; label: string; color: Color }[] };
 type PdfItem = Base & { type: "pdf"; name: string; dataUrl: string };
-type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem | ProfileItem | BrainItem | PdfItem;
+type LobesItem = Base & { type: "lobes" };
+type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem | ProfileItem | BrainItem | PdfItem | LobesItem;
 
 const INITIAL_ITEMS: Item[] = [
   { id: "n1", type: "node", x: 60, y: 80, w: 220, h: 100, color: "pink", tag: "NEURON", title: "Aktionspotential", body: "Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV." },
@@ -69,7 +71,7 @@ const INITIAL_ITEMS: Item[] = [
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem | BrainItem | PdfItem => it.type !== "connector";
+const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem | BrainItem | PdfItem | LobesItem => it.type !== "connector";
 
 // ---- Brain hemisphere illustration (Salvia theme) ----
 const SALVIA = "#3f8f81";
@@ -249,6 +251,7 @@ function WorkspacePage() {
     if (tool === "rect") return { id: uid(), type: "rect", x: w.x - 80, y: w.y - 50, w: 160, h: 100, color: "blue" };
     if (tool === "ellipse") return { id: uid(), type: "ellipse", x: w.x - 80, y: w.y - 50, w: 160, h: 100, color: "pink" };
     if (tool === "pdf") return { id: uid(), type: "pdf", x: w.x - 110, y: w.y - 70, w: 220, h: 140, color: "cream", name: "", dataUrl: "" };
+    if (tool === "lobes") return { id: uid(), type: "lobes", x: w.x - 260, y: w.y - 200, w: 520, h: 404, color: "cream" };
     return null;
   };
 
@@ -403,6 +406,7 @@ function WorkspacePage() {
       else if (e.key === "r") setTool("rect");
       else if (e.key === "o") setTool("ellipse");
       else if (e.key === "c") setTool("connector");
+      else if (e.key === "b") setTool("lobes");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -527,6 +531,7 @@ function WorkspacePage() {
     { id: "ellipse", label: "Ellips (O)" },
     { id: "connector", label: "Koppling (C)" },
     { id: "pdf", label: "Ladda upp PDF (P)" },
+    { id: "lobes", label: "Hjärna – lober (B)" },
   ];
   const TOOL_ICONS: Record<string, React.ReactNode> = {
     select: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>,
@@ -537,6 +542,7 @@ function WorkspacePage() {
     ellipse: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="12" rx="8" ry="6"/></svg>,
     connector: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><path d="M7.5 12h9"/></svg>,
     pdf: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 17h4"/></svg>,
+    lobes: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4c-2.5 0-4 1.8-4 3.8 0 .6-.7 1-.7 2.2 0 1 .7 1.4.7 2.2 0 .8-.7 1.2-.7 2.2 0 2 1.7 3.6 4 3.6"/><path d="M15 4c2.5 0 4 1.8 4 3.8 0 .6.7 1 .7 2.2 0 1-.7 1.4-.7 2.2 0 .8.7 1.2.7 2.2 0 2-1.7 3.6-4 3.6"/><path d="M12 4v16"/></svg>,
   };
 
   const selectedItem = selected.length === 1 ? itemsMap.get(selected[0]) ?? null : null;
@@ -675,6 +681,13 @@ function WorkspacePage() {
                 }
                 if (it.type === "rect") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
                 if (it.type === "ellipse") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
+                if (it.type === "lobes") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown}>
+                      <LoberBrain />
+                    </div>
+                  );
+                }
                 if (it.type === "pdf") {
                   const handleFile = (file: File | undefined) => {
                     if (!file) return;
@@ -1079,6 +1092,12 @@ const css = `
 .ws-item:active { cursor: grabbing; }
 .ws-item.is-selected { outline: 2px solid var(--coral); outline-offset: 4px; border-radius: 6px; }
 .ws-item.is-from { outline: 2px dashed var(--blue); outline-offset: 4px; }
+
+.ws-lobes {
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+}
+.ws-lobes > svg { width: 100%; height: 100%; pointer-events: none; }
 
 .ws-sticky {
   background: var(--yellow);
