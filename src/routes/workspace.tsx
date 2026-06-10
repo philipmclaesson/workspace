@@ -563,6 +563,27 @@ function WorkspacePage() {
                     </div>
                   );
                 }
+                if (it.type === "brain") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown}>
+                      <div className="ws-brain-head">
+                        <span className="ws-brain-tag">{it.title}</span>
+                        <span className="ws-brain-sub">{it.subtitle}</span>
+                      </div>
+                      <div className="ws-brain-canvas" aria-hidden="true">
+                        <BrainSvg highlights={it.highlights} />
+                      </div>
+                      <ul className="ws-brain-legend">
+                        {it.highlights.map(h => (
+                          <li key={h.id} className={`ws-brain-leg color-${h.color}`}>
+                            <span className="ws-brain-leg-dot" />
+                            <span className="ws-brain-leg-label">{h.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
                 return null;
               })}
             </div>
