@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import * as React from "react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/workspace")({
@@ -166,7 +167,12 @@ function WorkspacePage() {
             <p>Hur formar LTP långtidsminnet i hippocampus?</p>
           </article>
 
-          <button type="button" className="ws-add-node">+ LÄGG TILL NOD</button>
+          <div className="ws-zoom" role="group" aria-label="Zoom">
+            <button type="button" className="ws-zoom-btn" onClick={zoomIn} aria-label="Zooma in">+</button>
+            <span className="ws-zoom-val">{zoom}%</span>
+            <button type="button" className="ws-zoom-btn" onClick={zoomOut} aria-label="Zooma ut">−</button>
+            <button type="button" className="ws-zoom-fit" onClick={zoomFit}>FIT</button>
+          </div>
         </section>
       </div>
     </main>
