@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as LandingRouteImport } from './routes/landing'
-import { Route as HjarnaRouteImport } from './routes/hjarna'
 import { Route as IndexRouteImport } from './routes/index'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
@@ -24,11 +23,6 @@ const LandingRoute = LandingRouteImport.update({
   path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HjarnaRoute = HjarnaRouteImport.update({
-  id: '/hjarna',
-  path: '/hjarna',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,34 +31,30 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/hjarna': typeof HjarnaRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/hjarna': typeof HjarnaRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/hjarna': typeof HjarnaRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/hjarna' | '/landing' | '/workspace'
+  fullPaths: '/' | '/landing' | '/workspace'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/hjarna' | '/landing' | '/workspace'
-  id: '__root__' | '/' | '/hjarna' | '/landing' | '/workspace'
+  to: '/' | '/landing' | '/workspace'
+  id: '__root__' | '/' | '/landing' | '/workspace'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  HjarnaRoute: typeof HjarnaRoute
   LandingRoute: typeof LandingRoute
   WorkspaceRoute: typeof WorkspaceRoute
 }
@@ -85,13 +75,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/hjarna': {
-      id: '/hjarna'
-      path: '/hjarna'
-      fullPath: '/hjarna'
-      preLoaderRoute: typeof HjarnaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -104,7 +87,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  HjarnaRoute: HjarnaRoute,
   LandingRoute: LandingRoute,
   WorkspaceRoute: WorkspaceRoute,
 }
