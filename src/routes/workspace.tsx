@@ -341,6 +341,54 @@ function WorkspacePage() {
     setTool("select");
   };
 
+  const insertBrainTemplate = () => {
+    const rect = viewportRef.current?.getBoundingClientRect();
+    const center = rect
+      ? toWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+      : { x: 400, y: 300 };
+    const cx = Math.round(center.x);
+    const cy = Math.round(center.y);
+    const brainId = uid();
+    const highlights = [
+      { id: "amyg", label: "Amygdala", color: "pink" as Color },
+      { id: "hipp", label: "Hippocampus", color: "green" as Color },
+      { id: "pfc",  label: "Prefrontal kortex", color: "blue" as Color },
+      { id: "cere", label: "Cerebellum", color: "yellow" as Color },
+      { id: "thal", label: "Thalamus", color: "lilac" as Color },
+    ];
+    const brain: BrainItem = {
+      id: brainId,
+      type: "brain",
+      x: cx - 200, y: cy - 180,
+      w: 400, h: 360,
+      color: "cream",
+      title: "HJÄRNKARTA",
+      subtitle: "Noder & nätverk",
+      highlights,
+    };
+    const attrs: { tag: string; title: string; body: string; color: Color; dx: number; dy: number }[] = [
+      { tag: "EMOTION",    title: "Amygdala",          body: "Rädsla, hot- och belöningsbearbetning.",            color: "pink",   dx: -460, dy: -240 },
+      { tag: "MINNE",      title: "Hippocampus",       body: "Konsolidering av långtidsminnen, LTP.",             color: "green",  dx:  340, dy: -240 },
+      { tag: "EXEKUTIV",   title: "Prefrontal kortex", body: "Beslut, planering, impulskontroll.",                color: "blue",   dx: -460, dy:  240 },
+      { tag: "MOTORIK",    title: "Cerebellum",        body: "Finmotorik, balans, motorisk inlärning.",            color: "yellow", dx:  340, dy:  240 },
+      { tag: "RELÄ",       title: "Thalamus",          body: "Sensorisk relästation till cortex.",                 color: "lilac",  dx:  -60, dy:  340 },
+    ];
+    const nodes: NodeItem[] = attrs.map(a => ({
+      id: uid(),
+      type: "node",
+      x: cx + a.dx, y: cy + a.dy,
+      w: 220, h: 96,
+      color: a.color,
+      tag: a.tag, title: a.title, body: a.body,
+    }));
+    const connectors: ConnectorItem[] = nodes.map(n => ({
+      id: uid(), type: "connector", from: n.id, to: brainId, color: "ink",
+    }));
+    commit(its => [...its, brain, ...nodes, ...connectors]);
+    setSelected([brainId]);
+    setTool("select");
+  };
+
   const TEMPLATES = [
     { id: "profile", label: "Profil", hint: "PR", insert: insertProfileTemplate },
     { id: "brain", label: "Hjärna", hint: "BR", insert: insertBrainTemplate },
