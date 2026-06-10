@@ -195,13 +195,13 @@ const css = `
   font-family: 'Barlow Condensed', sans-serif;
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 0 clamp(20px, 4vw, 48px);
 }
 .ws-root * { box-sizing: border-box; }
 
 .ws-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 22px clamp(20px, 4vw, 48px) 10px;
+  padding: 22px 0 10px;
   border-bottom: 2px solid var(--ink);
 }
 .ws-logo {
@@ -236,13 +236,13 @@ const css = `
 .ws-sidebar {
   position: absolute;
   top: 24px;
-  left: clamp(20px, 4vw, 48px);
+  left: 0;
   width: 280px;
   z-index: 4;
-  background: #ffffff;
+  background: var(--cream);
   border: 2px solid var(--ink);
-  border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--ink);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
   padding: 22px 18px;
 }
 .ws-side-label {
@@ -285,7 +285,7 @@ const css = `
   background: transparent;
   overflow: hidden;
   min-height: calc(100vh - 140px);
-  padding: 28px 32px 28px calc(clamp(20px, 4vw, 48px) + 280px + 72px);
+  padding: 28px 0 28px calc(280px + 72px);
 }
 .ws-grid {
   position: absolute; inset: 0;
@@ -351,26 +351,26 @@ const css = `
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
 .ws-toolbar {
-  position: absolute; left: calc(clamp(20px, 4vw, 48px) + 280px + 16px); top: 24px;
+  position: absolute; left: calc(280px + 16px); top: 24px;
   display: flex; flex-direction: column; gap: 6px;
   padding: 8px 6px;
-  background: var(--ink); border: 2px solid var(--ink); border-radius: 16px;
-  box-shadow: 4px 4px 0 rgba(26,26,26,0.25);
+  background: var(--cream); border: 2px solid var(--ink); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
   z-index: 3;
 }
 .ws-tool {
   width: 36px; height: 36px;
   display: grid; place-items: center;
   border: 1px solid transparent; border-radius: 10px;
-  background: transparent; color: var(--cream); cursor: pointer;
+  background: transparent; color: var(--ink); cursor: pointer;
   transition: background 0.1s ease, color 0.1s ease;
 }
-.ws-tool:hover { background: rgba(245,241,232,0.12); }
-.ws-tool.is-active { background: var(--cream); color: var(--ink); border-color: var(--cream); }
-.ws-tool-sep { height: 1px; background: rgba(245,241,232,0.2); margin: 4px 4px; }
+.ws-tool:hover { background: rgba(26,26,26,0.08); }
+.ws-tool.is-active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+.ws-tool-sep { height: 1px; background: rgba(26,26,26,0.18); margin: 4px 4px; }
 
 .ws-zoom {
-  position: absolute; right: 22px; bottom: 22px;
+  position: absolute; right: 0; bottom: 22px;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 10px 8px;
   background: var(--cream);
