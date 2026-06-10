@@ -28,7 +28,7 @@ export function BracketLandingPage() {
       <style>{moduleCss}</style>
 
       <header className="brk-header">
-        <a href="/" className="brk-logo">BRACKET</a>
+        <a href="/landing" className="brk-logo">BRACKET</a>
         <nav className="brk-nav">
           <a href="#scoring">Scoring</a>
           <a href="#features">Features</a>
