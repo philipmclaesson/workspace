@@ -1001,6 +1001,30 @@ const css = `
 .ws-profile-stat-value { font-weight: 700; }
 
 .ws-side-templates { list-style: none; padding: 0; margin: 8px 0 4px; display: flex; flex-direction: column; gap: 8px; }
+.ws-brain {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 14px 14px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.ws-brain-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ws-brain-tag { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; color: #2f8576; }
+.ws-brain-sub { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(26,26,26,0.55); }
+.ws-brain-canvas { flex: 1; min-height: 0; background: #efece2; border: 1.5px solid var(--ink); border-radius: 14px; padding: 6px; overflow: hidden; display: grid; place-items: center; }
+.ws-brain-canvas svg { display: block; width: 100%; height: 100%; }
+.ws-brain-legend { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+.ws-brain-leg { display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--ink); }
+.ws-brain-leg-dot { width: 8px; height: 8px; border-radius: 999px; border: 1px solid var(--ink); display: inline-block; }
+.ws-brain-leg.color-yellow .ws-brain-leg-dot { background: #e0b94a; }
+.ws-brain-leg.color-pink   .ws-brain-leg-dot { background: #cc4a6a; }
+.ws-brain-leg.color-blue   .ws-brain-leg-dot { background: #2255cc; }
+.ws-brain-leg.color-green  .ws-brain-leg-dot { background: #226633; }
+.ws-brain-leg.color-lilac  .ws-brain-leg-dot { background: #7a5fc7; }
+.ws-brain-leg.color-cream  .ws-brain-leg-dot { background: #f5f1e8; }
+.ws-brain-leg.color-ink    .ws-brain-leg-dot { background: #1a1a1a; }
+
 .ws-template-card {
   width: 100%; display: flex; align-items: center; gap: 10px;
   padding: 8px; border: 2px solid var(--ink); border-radius: 12px;
