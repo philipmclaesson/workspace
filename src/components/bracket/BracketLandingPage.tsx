@@ -33,6 +33,7 @@ export function BracketLandingPage() {
           <a href="#scoring">Scoring</a>
           <a href="#features">Features</a>
           <a href="#groups">Groups</a>
+          <a href="/hjarna">Hjärna</a>
           <a href="#login" className="brk-nav-login">Login</a>
         </nav>
       </header>
