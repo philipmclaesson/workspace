@@ -141,44 +141,82 @@ type DragState =
   | null;
 
 function WorkspacePage() {
-  const [items, setItemsRaw] = useState<Item[]>(INITIAL_ITEMS);
-  const histRef = useRef<{ past: Item[][]; future: Item[][] }>({ past: [], future: [] });
+  const [activeModule, setActiveModule] = useState<string | null>(null);
+  const [itemsByModule, setItemsByModule] = useState<Record<string, Item[]>>(() =>
+    Object.fromEntries(MODULES.map(m => [m.id, m.id === "biologisk" ? INITIAL_ITEMS : []]))
+  );
+  const histRef = useRef<Record<string, { past: Item[][]; future: Item[][] }>>({});
+  const activeModuleRef = useRef<string | null>(null);
+  useEffect(() => { activeModuleRef.current = activeModule; }, [activeModule]);
+  const getHist = (mod: string) => {
+    if (!histRef.current[mod]) histRef.current[mod] = { past: [], future: [] };
+    return histRef.current[mod];
+  };
+
+  const items = activeModule ? (itemsByModule[activeModule] ?? []) : [];
+
+  const setItemsRaw = (next: Item[] | ((prev: Item[]) => Item[])) => {
+    if (!activeModule) return;
+    setItemsByModule(prev => {
+      const cur = prev[activeModule] ?? [];
+      const value = typeof next === "function" ? (next as (p: Item[]) => Item[])(cur) : next;
+      return { ...prev, [activeModule]: value };
+    });
+  };
 
   const commit = (next: Item[] | ((prev: Item[]) => Item[])) => {
-    setItemsRaw(prev => {
-      const value = typeof next === "function" ? (next as (p: Item[]) => Item[])(prev) : next;
-      histRef.current.past.push(prev);
-      if (histRef.current.past.length > 80) histRef.current.past.shift();
-      histRef.current.future = [];
-      return value;
+    if (!activeModule) return;
+    const mod = activeModule;
+    setItemsByModule(prev => {
+      const cur = prev[mod] ?? [];
+      const value = typeof next === "function" ? (next as (p: Item[]) => Item[])(cur) : next;
+      const h = getHist(mod);
+      h.past.push(cur);
+      if (h.past.length > 80) h.past.shift();
+      h.future = [];
+      return { ...prev, [mod]: value };
     });
   };
 
   const undo = () => {
-    const h = histRef.current;
+    if (!activeModule) return;
+    const mod = activeModule;
+    const h = getHist(mod);
     if (!h.past.length) return;
-    setItemsRaw(prev => {
-      h.future.unshift(prev);
-      return h.past.pop()!;
+    setItemsByModule(prev => {
+      const cur = prev[mod] ?? [];
+      h.future.unshift(cur);
+      return { ...prev, [mod]: h.past.pop()! };
     });
   };
   const redo = () => {
-    const h = histRef.current;
+    if (!activeModule) return;
+    const mod = activeModule;
+    const h = getHist(mod);
     if (!h.future.length) return;
-    setItemsRaw(prev => {
-      h.past.push(prev);
-      return h.future.shift()!;
+    setItemsByModule(prev => {
+      const cur = prev[mod] ?? [];
+      h.past.push(cur);
+      return { ...prev, [mod]: h.future.shift()! };
     });
   };
 
   const [active, setActive] = useState<SectionId>("overview");
-  const [notes, setNotes] = useState<Record<SectionId, string>>({ overview: "", notes: "", concepts: "", neurons: "", sources: "", questions: "" });
+  const emptyNotes = (): Record<SectionId, string> => ({ overview: "", notes: "", concepts: "", neurons: "", sources: "", questions: "" });
+  const [notesByModule, setNotesByModule] = useState<Record<string, Record<SectionId, string>>>(() =>
+    Object.fromEntries(MODULES.map(m => [m.id, emptyNotes()]))
+  );
+  const notes = activeModule ? (notesByModule[activeModule] ?? emptyNotes()) : emptyNotes();
+  const setNotes = (updater: (n: Record<SectionId, string>) => Record<SectionId, string>) => {
+    if (!activeModule) return;
+    const mod = activeModule;
+    setNotesByModule(prev => ({ ...prev, [mod]: updater(prev[mod] ?? emptyNotes()) }));
+  };
   const [zoom, setZoom] = useState(100);
   const [tool, setTool] = useState<string>("select");
   const [pan, setPan] = useState({ x: 40, y: 40 });
   const [sideCollapsed, setSideCollapsed] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  const [activeModule, setActiveModule] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
@@ -211,6 +249,7 @@ function WorkspacePage() {
 
   const onCanvasMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
+    if (!activeModule) return;
     if (tool === "select" || tool === "hand") {
       setSelected([]);
       setEditingId(null);
@@ -295,9 +334,13 @@ function WorkspacePage() {
     const onUp = () => {
       const d = dragRef.current;
       if (d?.type === "move") {
-        histRef.current.past.push(d.snapshot);
-        if (histRef.current.past.length > 80) histRef.current.past.shift();
-        histRef.current.future = [];
+        const mod = activeModuleRef.current;
+        if (mod) {
+          const h = getHist(mod);
+          h.past.push(d.snapshot);
+          if (h.past.length > 80) h.past.shift();
+          h.future = [];
+        }
       }
       dragRef.current = null;
       document.body.style.cursor = "";
@@ -557,6 +600,13 @@ function WorkspacePage() {
             onMouseDown={onCanvasMouseDown}
           >
             <div className="ws-grid" aria-hidden="true" style={{ backgroundSize: `${22 * scale}px ${22 * scale}px`, backgroundPosition: `${pan.x}px ${pan.y}px` }} />
+            {!activeModule && (
+              <div className="ws-empty">
+                <div className="ws-empty-label">VÄLJ DELKURS</div>
+                <h2 className="ws-empty-title">Öppna en delkurs för att börja</h2>
+                <p className="ws-empty-sub">Varje delkurs har sitt eget workspace med egna anteckningar, noder och kopplingar.</p>
+              </div>
+            )}
             <div className="ws-world" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}>
               <svg className="ws-edges" aria-hidden="true" width="6000" height="4000" style={{ left: -2000, top: -2000 }}>
                 {items.filter((it): it is ConnectorItem => it.type === "connector").map(c => {
@@ -802,6 +852,21 @@ const css = `
 }
 .ws-sidebar.is-collapsed { padding: 44px 6px 8px; }
 .ws-sidebar.is-collapsed .ws-side-toggle { z-index: 5; }
+.ws-empty {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 24px; pointer-events: none; z-index: 2;
+}
+.ws-empty-label {
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.25em; color: var(--coral);
+}
+.ws-empty-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: clamp(32px, 5vw, 56px);
+  letter-spacing: 0.02em; margin: 8px 0 6px; color: var(--ink);
+}
+.ws-empty-sub {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 16px; max-width: 460px; color: var(--ink); opacity: 0.7;
+}
 .ws-side-toggle {
   position: absolute; top: 8px; right: 8px;
   width: 26px; height: 26px;
