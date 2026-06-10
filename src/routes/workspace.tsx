@@ -198,7 +198,6 @@ function WorkspacePage() {
             ref={viewportRef}
             className={`ws-viewport ${tool === "node" ? "is-adding" : ""}`}
             onMouseDown={onCanvasMouseDown}
-            onWheel={onWheel}
           >
             <div
               className="ws-grid"
