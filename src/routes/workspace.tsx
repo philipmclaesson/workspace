@@ -398,6 +398,21 @@ function WorkspacePage() {
           if (wx >= it.x && wx <= it.x + it.w && wy >= it.y && wy <= it.y + it.h) { hover = it.id; break; }
         }
         setRewireGhost({ x: wx, y: wy, hoverId: hover });
+      } else if (d.type === "link") {
+        const rect = viewportRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const wx = (e.clientX - rect.left - pan.x) / scale;
+        const wy = (e.clientY - rect.top - pan.y) / scale;
+        const mod = activeModuleRef.current;
+        const cur = mod ? (itemsByModuleRef.current[mod] ?? []) : [];
+        let hover: string | null = null;
+        for (let i = cur.length - 1; i >= 0; i--) {
+          const it = cur[i];
+          if (it.type === "connector") continue;
+          if (it.id === d.fromId) continue;
+          if (wx >= it.x && wx <= it.x + it.w && wy >= it.y && wy <= it.y + it.h) { hover = it.id; break; }
+        }
+        setLinkGhost({ x: wx, y: wy, hoverId: hover });
       }
     };
     const onUp = () => {
@@ -431,6 +446,26 @@ function WorkspacePage() {
           });
         }
         setRewireGhost(null);
+      }
+      if (d?.type === "link") {
+        const ghost = linkGhostRef.current;
+        const mod = activeModuleRef.current;
+        if (mod && ghost && ghost.hoverId && ghost.hoverId !== d.fromId) {
+          const target = ghost.hoverId;
+          const fromId = d.fromId;
+          setItemsByModule(prev => {
+            const cur = prev[mod] ?? [];
+            const exists = cur.some(it => it.type === "connector" && ((it.from === fromId && it.to === target) || (it.from === target && it.to === fromId)));
+            if (exists) return prev;
+            const newConn: ConnectorItem = { id: uid(), type: "connector", from: fromId, to: target, color: "ink" };
+            const h = getHist(mod);
+            h.past.push(d.snapshot);
+            if (h.past.length > 80) h.past.shift();
+            h.future = [];
+            return { ...prev, [mod]: [...cur, newConn] };
+          });
+        }
+        setLinkGhost(null);
       }
       dragRef.current = null;
       document.body.style.cursor = "";
