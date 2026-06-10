@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { WorkspaceChat } from "@/components/WorkspaceChat";
 
 export const Route = createFileRoute("/workspace")({
   head: () => ({
@@ -217,6 +218,7 @@ function WorkspacePage() {
   const [pan, setPan] = useState({ x: 40, y: 40 });
   const [sideCollapsed, setSideCollapsed] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
@@ -761,6 +763,30 @@ function WorkspacePage() {
             <button type="button" className="ws-zoom-btn" onClick={zoomOut} aria-label="Zooma ut">−</button>
             <button type="button" className="ws-zoom-fit" onClick={zoomFit}>FIT</button>
           </div>
+
+          {!chatOpen && (
+            <button
+              type="button"
+              className="ws-chat-toggle"
+              onClick={() => setChatOpen(true)}
+              aria-label="Öppna AI-chatt"
+              title="AI-tutor"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12a8 8 0 01-11.6 7.15L4 20l1-4.5A8 8 0 1121 12z" />
+                <circle cx="9" cy="12" r="1" fill="currentColor" />
+                <circle cx="13" cy="12" r="1" fill="currentColor" />
+                <circle cx="17" cy="12" r="1" fill="currentColor" />
+              </svg>
+            </button>
+          )}
+
+          <WorkspaceChat
+            open={chatOpen}
+            onClose={() => setChatOpen(false)}
+            moduleId={activeModule}
+            moduleLabel={activeModule ? (MODULES.find(m => m.id === activeModule)?.label ?? null) : null}
+          />
         </section>
       </div>
     </main>
