@@ -847,6 +847,33 @@ function WorkspacePage() {
             moduleId={activeModule}
             moduleLabel={activeModule ? (MODULES.find(m => m.id === activeModule)?.label ?? null) : null}
           />
+
+          {(() => {
+            const openPdf = pdfOpenId ? items.find(i => i.id === pdfOpenId && i.type === "pdf") as PdfItem | undefined : undefined;
+            return (
+              <div className={`ws-pdf-viewer ${openPdf && openPdf.dataUrl ? "is-open" : ""}`} role="dialog" aria-label="PDF-läsare">
+                {openPdf && openPdf.dataUrl && (
+                  <>
+                    <div className="ws-pdf-viewer-head">
+                      <div>
+                        <div className="ws-pdf-viewer-label">PDF</div>
+                        <h3 className="ws-pdf-viewer-title" title={openPdf.name}>{openPdf.name}</h3>
+                      </div>
+                      <div className="ws-pdf-viewer-actions">
+                        <a className="ws-pdf-viewer-link" href={openPdf.dataUrl} target="_blank" rel="noreferrer">Ny flik</a>
+                        <button type="button" className="ws-chat-close" onClick={() => setPdfOpenId(null)} aria-label="Stäng PDF">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                    <object className="ws-pdf-viewer-frame" data={openPdf.dataUrl} type="application/pdf" aria-label={openPdf.name}>
+                      <div className="ws-pdf-fallback">Förhandsvisning ej tillgänglig</div>
+                    </object>
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </section>
       </div>
     </main>
