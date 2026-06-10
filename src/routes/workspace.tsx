@@ -251,6 +251,7 @@ function WorkspacePage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
+  const [rewireGhost, setRewireGhost] = useState<{ x: number; y: number; hoverId: string | null } | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState>(null);
@@ -352,11 +353,13 @@ function WorkspacePage() {
     const onMove = (e: MouseEvent) => {
       const d = dragRef.current;
       if (!d) return;
-      const dx = e.clientX - d.startX;
-      const dy = e.clientY - d.startY;
       if (d.type === "pan") {
+        const dx = e.clientX - d.startX;
+        const dy = e.clientY - d.startY;
         setPan({ x: d.origPan.x + dx, y: d.origPan.y + dy });
-      } else {
+      } else if (d.type === "move") {
+        const dx = e.clientX - d.startX;
+        const dy = e.clientY - d.startY;
         const s = d.scale;
         const mod = activeModuleRef.current;
         if (!mod) return;
@@ -370,6 +373,23 @@ function WorkspacePage() {
             }),
           };
         });
+      } else if (d.type === "rewire") {
+        const rect = viewportRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const wx = (e.clientX - rect.left - pan.x) / scale;
+        const wy = (e.clientY - rect.top - pan.y) / scale;
+        const mod = activeModuleRef.current;
+        const cur = mod ? (itemsByModuleRef.current[mod] ?? []) : [];
+        const conn = cur.find(it => it.id === d.connId);
+        const otherEnd = conn && conn.type === "connector" ? (d.end === "from" ? conn.to : conn.from) : null;
+        let hover: string | null = null;
+        for (let i = cur.length - 1; i >= 0; i--) {
+          const it = cur[i];
+          if (it.type === "connector") continue;
+          if (it.id === otherEnd) continue;
+          if (wx >= it.x && wx <= it.x + it.w && wy >= it.y && wy <= it.y + it.h) { hover = it.id; break; }
+        }
+        setRewireGhost({ x: wx, y: wy, hoverId: hover });
       }
     };
     const onUp = () => {
@@ -383,13 +403,35 @@ function WorkspacePage() {
           h.future = [];
         }
       }
+      if (d?.type === "rewire") {
+        const ghost = rewireGhostRef.current;
+        const mod = activeModuleRef.current;
+        if (mod && ghost && ghost.hoverId) {
+          const target = ghost.hoverId;
+          const end = d.end;
+          setItemsByModule(prev => {
+            const cur = prev[mod] ?? [];
+            const next = cur.map(it => {
+              if (it.id !== d.connId || it.type !== "connector") return it;
+              return end === "from" ? { ...it, from: target } : { ...it, to: target };
+            });
+            const h = getHist(mod);
+            h.past.push(d.snapshot);
+            if (h.past.length > 80) h.past.shift();
+            h.future = [];
+            return { ...prev, [mod]: next };
+          });
+        }
+        setRewireGhost(null);
+      }
       dragRef.current = null;
       document.body.style.cursor = "";
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pan.x, pan.y, scale]);
 
   useEffect(() => {
     const el = viewportRef.current;
