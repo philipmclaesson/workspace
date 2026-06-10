@@ -21,6 +21,7 @@ function LandingPage() {
         href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;700;900&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap"
         rel="stylesheet"
       />
+      <link rel="preload" as="video" href={bgVideo.url} type="video/mp4" />
       <style>{css}</style>
 
       <video
@@ -29,6 +30,7 @@ function LandingPage() {
         muted
         loop
         playsInline
+        preload="auto"
       >
         <source src={bgVideo.url} type="video/mp4" />
       </video>
@@ -80,7 +82,7 @@ const css = `
   --ink: #1a1a1a;
   --coral: #cc3a1e;
   --green: #226633;
-  background: var(--cream);
+  background: #0a1a22;
   color: var(--ink);
   height: 100vh;
   width: 100%;
