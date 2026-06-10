@@ -297,7 +297,7 @@ const css = `
   background-size: 32px 32px;
   pointer-events: none;
 }
-.ws-canvas-head { position: relative; max-width: 560px; margin-bottom: 32px; }
+.ws-canvas-head { position: relative; max-width: 560px; margin: 0 0 32px 64px; }
 .ws-eyebrow {
   font-family: 'Space Mono', monospace; font-size: 11px;
   letter-spacing: 0.2em; color: var(--coral); text-transform: uppercase;
