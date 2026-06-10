@@ -24,6 +24,31 @@ const SECTIONS: { id: SectionId; label: string; hint: string }[] = [
 
 function WorkspacePage() {
   const [active, setActive] = useState<SectionId>("overview");
+  const [zoom, setZoom] = useState(100);
+  const [tool, setTool] = useState<string>("select");
+  const zoomIn = () => setZoom((z) => Math.min(200, z + 10));
+  const zoomOut = () => setZoom((z) => Math.max(30, z - 10));
+  const zoomFit = () => setZoom(100);
+  const TOOLS: { id: string; label: string; icon: JSX.Element }[] = [
+    { id: "select", label: "Välj", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>
+    )},
+    { id: "node", label: "Lägg till nod", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+    )},
+    { id: "note", label: "Anteckning", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4"/></svg>
+    )},
+    { id: "text", label: "Text", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 5h14M12 5v14"/></svg>
+    )},
+    { id: "edge", label: "Koppling", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><path d="M7.5 12h9"/></svg>
+    )},
+    { id: "group", label: "Grupp", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+    )},
+  ];
   return (
     <main className="ws-root">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -67,6 +92,28 @@ function WorkspacePage() {
 
         <section className="ws-canvas">
           <div className="ws-grid" aria-hidden="true" />
+
+          <div className="ws-toolbar" role="toolbar" aria-label="Verktyg">
+            {TOOLS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`ws-tool ${tool === t.id ? "is-active" : ""}`}
+                onClick={() => setTool(t.id)}
+                title={t.label}
+                aria-label={t.label}
+              >
+                {t.icon}
+              </button>
+            ))}
+            <div className="ws-tool-sep" />
+            <button type="button" className="ws-tool" title="Ångra" aria-label="Ångra">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg>
+            </button>
+            <button type="button" className="ws-tool" title="Gör om" aria-label="Gör om">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h3"/></svg>
+            </button>
+          </div>
 
           <div className="ws-canvas-head">
             <span className="ws-eyebrow">WORKSPACE · {SECTIONS.find(s => s.id === active)?.hint}</span>
