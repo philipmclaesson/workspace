@@ -145,10 +145,30 @@ type DragState =
   | null;
 
 function WorkspacePage() {
+  const ITEMS_KEY = "ws:itemsByModule:v1";
+  const NOTES_KEY = "ws:notesByModule:v1";
+  const loadItems = (): Record<string, Item[]> => {
+    const base = Object.fromEntries(MODULES.map(m => [m.id, m.id === "biologisk" ? INITIAL_ITEMS : []]));
+    if (typeof window === "undefined") return base;
+    try {
+      const raw = window.localStorage.getItem(ITEMS_KEY);
+      if (!raw) return base;
+      const parsed = JSON.parse(raw) as Record<string, Item[]>;
+      return { ...base, ...parsed };
+    } catch { return base; }
+  };
+  const loadNotes = (): Record<string, Record<SectionId, string>> => {
+    const base = Object.fromEntries(MODULES.map(m => [m.id, { overview: "", notes: "", concepts: "", neurons: "", sources: "", questions: "" } as Record<SectionId, string>]));
+    if (typeof window === "undefined") return base;
+    try {
+      const raw = window.localStorage.getItem(NOTES_KEY);
+      if (!raw) return base;
+      const parsed = JSON.parse(raw) as Record<string, Record<SectionId, string>>;
+      return { ...base, ...parsed };
+    } catch { return base; }
+  };
   const [activeModule, setActiveModule] = useState<string | null>(null);
-  const [itemsByModule, setItemsByModule] = useState<Record<string, Item[]>>(() =>
-    Object.fromEntries(MODULES.map(m => [m.id, m.id === "biologisk" ? INITIAL_ITEMS : []]))
-  );
+  const [itemsByModule, setItemsByModule] = useState<Record<string, Item[]>>(loadItems);
   const histRef = useRef<Record<string, { past: Item[][]; future: Item[][] }>>({});
   const activeModuleRef = useRef<string | null>(null);
   useEffect(() => { activeModuleRef.current = activeModule; }, [activeModule]);
@@ -207,9 +227,13 @@ function WorkspacePage() {
 
   const [active, setActive] = useState<SectionId>("overview");
   const emptyNotes = (): Record<SectionId, string> => ({ overview: "", notes: "", concepts: "", neurons: "", sources: "", questions: "" });
-  const [notesByModule, setNotesByModule] = useState<Record<string, Record<SectionId, string>>>(() =>
-    Object.fromEntries(MODULES.map(m => [m.id, emptyNotes()]))
-  );
+  const [notesByModule, setNotesByModule] = useState<Record<string, Record<SectionId, string>>>(loadNotes);
+  useEffect(() => {
+    try { window.localStorage.setItem(ITEMS_KEY, JSON.stringify(itemsByModule)); } catch {}
+  }, [itemsByModule]);
+  useEffect(() => {
+    try { window.localStorage.setItem(NOTES_KEY, JSON.stringify(notesByModule)); } catch {}
+  }, [notesByModule]);
   const notes = activeModule ? (notesByModule[activeModule] ?? emptyNotes()) : emptyNotes();
   const setNotes = (updater: (n: Record<SectionId, string>) => Record<SectionId, string>) => {
     if (!activeModule) return;
