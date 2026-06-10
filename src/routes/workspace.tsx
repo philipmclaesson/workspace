@@ -525,6 +525,18 @@ function WorkspacePage() {
               </button>
             ))}
             <div className="ws-tool-sep" />
+            <div className="ws-tool-label" title="Templates">TPL</div>
+            {TEMPLATES.map(t => (
+              <button key={t.id} type="button" className="ws-tool ws-tool-tpl" onClick={t.insert} title={`Template: ${t.label}`} aria-label={`Template: ${t.label}`}>
+                <span className="ws-tpl-mini" aria-hidden="true">
+                  <span className="ws-tpl-mini-face" />
+                  <span className="ws-tpl-mini-bar b1" />
+                  <span className="ws-tpl-mini-bar b2" />
+                  <span className="ws-tpl-mini-bar b3" />
+                </span>
+              </button>
+            ))}
+            <div className="ws-tool-sep" />
             <button type="button" className="ws-tool" onClick={undo} title="Ångra" aria-label="Ångra">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg>
             </button>
