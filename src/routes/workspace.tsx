@@ -257,6 +257,9 @@ function WorkspacePage() {
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
   const [rewireGhost, setRewireGhost] = useState<{ x: number; y: number; hoverId: string | null } | null>(null);
   useEffect(() => { rewireGhostRef.current = rewireGhost; }, [rewireGhost]);
+  const [linkGhost, setLinkGhost] = useState<{ x: number; y: number; hoverId: string | null } | null>(null);
+  const linkGhostRef = useRef<{ x: number; y: number; hoverId: string | null } | null>(null);
+  useEffect(() => { linkGhostRef.current = linkGhost; }, [linkGhost]);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState>(null);
