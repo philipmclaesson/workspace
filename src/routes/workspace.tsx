@@ -338,20 +338,33 @@ const css = `
   padding: 0;
   flex: 1;
   min-height: 0;
+  --side-w: 280px;
 }
+.ws-shell.is-collapsed { --side-w: 56px; }
 
 .ws-sidebar {
   position: absolute;
   top: 24px;
   left: 24px;
-  width: 280px;
+  width: var(--side-w);
   z-index: 4;
   background: var(--cream);
   border: 2px solid var(--ink);
   border-radius: 14px;
   box-shadow: 4px 4px 0 var(--ink);
   padding: 22px 18px;
+  transition: width 0.18s ease, padding 0.18s ease;
 }
+.ws-sidebar.is-collapsed { padding: 8px 6px; }
+.ws-side-toggle {
+  position: absolute; top: -10px; right: -10px;
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border: 2px solid var(--ink); border-radius: 999px;
+  background: var(--cream); color: var(--ink); cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.ws-side-toggle:hover { background: var(--ink); color: var(--cream); }
 .ws-side-label {
   font-family: 'Space Mono', monospace;
   font-size: 11px; letter-spacing: 0.2em; color: var(--coral);
@@ -374,6 +387,18 @@ const css = `
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
   box-shadow: 3px 3px 0 var(--ink);
+}
+.ws-sidebar.is-collapsed .ws-side-item {
+  padding: 8px 0;
+  justify-content: center;
+  gap: 0;
+  font-size: 12px;
+}
+.ws-sidebar.is-collapsed .ws-side-hint { opacity: 1; }
+.ws-sidebar.is-collapsed .ws-side-add {
+  padding: 8px 0;
+  font-size: 16px;
+  border-style: solid;
 }
 .ws-side-item:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
 .ws-side-item.is-active { background: var(--green); color: #f5f1e8; }
@@ -472,7 +497,7 @@ const css = `
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
 .ws-toolbar {
-  position: absolute; left: calc(24px + 280px + 16px); top: 24px;
+  position: absolute; left: calc(24px + var(--side-w) + 16px); top: 24px;
   display: flex; flex-direction: column; gap: 6px;
   padding: 8px 6px;
   background: var(--cream); border: 2px solid var(--ink); border-radius: 14px;
