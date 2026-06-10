@@ -503,6 +503,7 @@ const css = `
   background: var(--cream); border: 2px solid var(--ink); border-radius: 14px;
   box-shadow: 4px 4px 0 var(--ink);
   z-index: 3;
+  transition: left 0.18s ease;
 }
 .ws-tool {
   width: 36px; height: 36px;
