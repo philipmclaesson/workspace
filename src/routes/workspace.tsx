@@ -1093,6 +1093,12 @@ const css = `
 .ws-item.is-selected { outline: 2px solid var(--coral); outline-offset: 4px; border-radius: 6px; }
 .ws-item.is-from { outline: 2px dashed var(--blue); outline-offset: 4px; }
 
+.ws-lobes {
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+}
+.ws-lobes > svg { width: 100%; height: 100%; pointer-events: none; }
+
 .ws-sticky {
   background: var(--yellow);
   border: 2px solid var(--ink);
