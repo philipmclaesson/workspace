@@ -60,6 +60,72 @@ const INITIAL_ITEMS: Item[] = [
 const uid = () => Math.random().toString(36).slice(2, 10);
 const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem | BrainItem => it.type !== "connector";
 
+// ---- Brain hemisphere illustration (Salvia theme) ----
+const SALVIA = "#3f8f81";
+const SALVIA_DEEP = "#2f8576";
+const HL_HEX: Record<Color, string> = {
+  yellow: "#e0b94a", pink: "#cc4a6a", blue: "#2255cc",
+  green: "#226633", lilac: "#7a5fc7", cream: "#1a1a1a", ink: "#1a1a1a",
+};
+function BrainSvg({ highlights }: { highlights: { id: string; label: string; color: Color }[] }) {
+  // Deterministic pseudo-random nodes per hemisphere
+  const rand = (s: number) => {
+    let x = Math.sin(s) * 10000; return x - Math.floor(x);
+  };
+  const makeHemi = (side: 1 | -1, seed: number) => {
+    const pts: { x: number; y: number; r: number }[] = [];
+    for (let i = 0; i < 38; i++) {
+      const a = rand(seed + i) * Math.PI - Math.PI / 2;
+      const r = 60 + rand(seed + i + 100) * 30;
+      const px = side * (10 + Math.cos(a) * r * (0.6 + rand(seed + i + 7) * 0.5));
+      const py = Math.sin(a) * r * 1.1 + (rand(seed + i + 33) - 0.5) * 20;
+      pts.push({ x: px, y: py, r: 2.2 + rand(seed + i + 9) * 3 });
+    }
+    return pts;
+  };
+  const left = makeHemi(-1, 11);
+  const right = makeHemi(1, 23);
+  // Edges: nearest neighbours within hemisphere
+  const edges = (pts: { x: number; y: number; r: number }[]) => {
+    const lines: [number, number][] = [];
+    pts.forEach((p, i) => {
+      const dists = pts.map((q, j) => ({ j, d: (q.x - p.x) ** 2 + (q.y - p.y) ** 2 })).filter(o => o.j !== i).sort((a, b) => a.d - b.d).slice(0, 3);
+      dists.forEach(({ j }) => { if (j > i) lines.push([i, j]); });
+    });
+    return lines;
+  };
+  const le = edges(left); const re = edges(right);
+  // Highlight positions on left hemisphere
+  const hlPos = [
+    { x: -50, y: -30 }, { x:  50, y: -30 }, { x: -30, y:  35 },
+    { x:  35, y:  35 }, { x:   2, y:  10 },
+  ];
+  return (
+    <svg viewBox="-130 -90 260 180" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+      <g stroke={SALVIA} strokeWidth="1" strokeLinecap="round" opacity="0.85">
+        {le.map(([a, b], i) => <line key={`le${i}`} x1={left[a].x} y1={left[a].y} x2={left[b].x} y2={left[b].y} />)}
+        {re.map(([a, b], i) => <line key={`re${i}`} x1={right[a].x} y1={right[a].y} x2={right[b].x} y2={right[b].y} />)}
+      </g>
+      <g fill={SALVIA_DEEP} opacity="0.9">
+        {left.map((p, i) => <circle key={`ln${i}`} cx={p.x} cy={p.y} r={p.r} />)}
+        {right.map((p, i) => <circle key={`rn${i}`} cx={p.x} cy={p.y} r={p.r} />)}
+      </g>
+      {/* Outline silhouette hint */}
+      <g fill="none" stroke={SALVIA} strokeWidth="2.5" opacity="0.55" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M -5 -78 C -50 -78 -100 -55 -110 -10 C -118 30 -100 70 -55 78 C -30 82 -15 70 -8 60" />
+        <path d="M  5 -78 C  50 -78  100 -55  110 -10 C  118 30  100 70   55 78 C  30 82   15 70   8 60" />
+      </g>
+      {/* Highlights */}
+      {highlights.slice(0, hlPos.length).map((h, i) => (
+        <g key={h.id}>
+          <circle cx={hlPos[i].x} cy={hlPos[i].y} r="8" fill={HL_HEX[h.color]} opacity="0.18" />
+          <circle cx={hlPos[i].x} cy={hlPos[i].y} r="4" fill={HL_HEX[h.color]} stroke="#1a1a1a" strokeWidth="1.2" />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 type DragState =
   | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
   | { type: "move"; startX: number; startY: number; ids: string[]; origs: Record<string, { x: number; y: number }>; scale: number; snapshot: Item[] }
