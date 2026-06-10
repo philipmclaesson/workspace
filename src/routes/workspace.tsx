@@ -44,7 +44,8 @@ type EllipseItem = Base & { type: "ellipse" };
 type ConnectorItem = { id: string; type: "connector"; from: string; to: string; color: Color };
 type ProfileStat = { label: string; value: string; color: Color };
 type ProfileItem = Base & { type: "profile"; name: string; role: string; stats: ProfileStat[] };
-type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem | ProfileItem;
+type BrainItem = Base & { type: "brain"; title: string; subtitle: string; highlights: { id: string; label: string; color: Color }[] };
+type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem | ProfileItem | BrainItem;
 
 const INITIAL_ITEMS: Item[] = [
   { id: "n1", type: "node", x: 60, y: 80, w: 220, h: 100, color: "pink", tag: "NEURON", title: "Aktionspotential", body: "Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV." },
@@ -57,7 +58,73 @@ const INITIAL_ITEMS: Item[] = [
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem => it.type !== "connector";
+const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem | BrainItem => it.type !== "connector";
+
+// ---- Brain hemisphere illustration (Salvia theme) ----
+const SALVIA = "#3f8f81";
+const SALVIA_DEEP = "#2f8576";
+const HL_HEX: Record<Color, string> = {
+  yellow: "#e0b94a", pink: "#cc4a6a", blue: "#2255cc",
+  green: "#226633", lilac: "#7a5fc7", cream: "#1a1a1a", ink: "#1a1a1a",
+};
+function BrainSvg({ highlights }: { highlights: { id: string; label: string; color: Color }[] }) {
+  // Deterministic pseudo-random nodes per hemisphere
+  const rand = (s: number) => {
+    let x = Math.sin(s) * 10000; return x - Math.floor(x);
+  };
+  const makeHemi = (side: 1 | -1, seed: number) => {
+    const pts: { x: number; y: number; r: number }[] = [];
+    for (let i = 0; i < 38; i++) {
+      const a = rand(seed + i) * Math.PI - Math.PI / 2;
+      const r = 60 + rand(seed + i + 100) * 30;
+      const px = side * (10 + Math.cos(a) * r * (0.6 + rand(seed + i + 7) * 0.5));
+      const py = Math.sin(a) * r * 1.1 + (rand(seed + i + 33) - 0.5) * 20;
+      pts.push({ x: px, y: py, r: 2.2 + rand(seed + i + 9) * 3 });
+    }
+    return pts;
+  };
+  const left = makeHemi(-1, 11);
+  const right = makeHemi(1, 23);
+  // Edges: nearest neighbours within hemisphere
+  const edges = (pts: { x: number; y: number; r: number }[]) => {
+    const lines: [number, number][] = [];
+    pts.forEach((p, i) => {
+      const dists = pts.map((q, j) => ({ j, d: (q.x - p.x) ** 2 + (q.y - p.y) ** 2 })).filter(o => o.j !== i).sort((a, b) => a.d - b.d).slice(0, 3);
+      dists.forEach(({ j }) => { if (j > i) lines.push([i, j]); });
+    });
+    return lines;
+  };
+  const le = edges(left); const re = edges(right);
+  // Highlight positions on left hemisphere
+  const hlPos = [
+    { x: -50, y: -30 }, { x:  50, y: -30 }, { x: -30, y:  35 },
+    { x:  35, y:  35 }, { x:   2, y:  10 },
+  ];
+  return (
+    <svg viewBox="-130 -90 260 180" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+      <g stroke={SALVIA} strokeWidth="1" strokeLinecap="round" opacity="0.85">
+        {le.map(([a, b], i) => <line key={`le${i}`} x1={left[a].x} y1={left[a].y} x2={left[b].x} y2={left[b].y} />)}
+        {re.map(([a, b], i) => <line key={`re${i}`} x1={right[a].x} y1={right[a].y} x2={right[b].x} y2={right[b].y} />)}
+      </g>
+      <g fill={SALVIA_DEEP} opacity="0.9">
+        {left.map((p, i) => <circle key={`ln${i}`} cx={p.x} cy={p.y} r={p.r} />)}
+        {right.map((p, i) => <circle key={`rn${i}`} cx={p.x} cy={p.y} r={p.r} />)}
+      </g>
+      {/* Outline silhouette hint */}
+      <g fill="none" stroke={SALVIA} strokeWidth="2.5" opacity="0.55" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M -5 -78 C -50 -78 -100 -55 -110 -10 C -118 30 -100 70 -55 78 C -30 82 -15 70 -8 60" />
+        <path d="M  5 -78 C  50 -78  100 -55  110 -10 C  118 30  100 70   55 78 C  30 82   15 70   8 60" />
+      </g>
+      {/* Highlights */}
+      {highlights.slice(0, hlPos.length).map((h, i) => (
+        <g key={h.id}>
+          <circle cx={hlPos[i].x} cy={hlPos[i].y} r="8" fill={HL_HEX[h.color]} opacity="0.18" />
+          <circle cx={hlPos[i].x} cy={hlPos[i].y} r="4" fill={HL_HEX[h.color]} stroke="#1a1a1a" strokeWidth="1.2" />
+        </g>
+      ))}
+    </svg>
+  );
+}
 
 type DragState =
   | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
@@ -340,8 +407,57 @@ function WorkspacePage() {
     setTool("select");
   };
 
+  const insertBrainTemplate = () => {
+    const rect = viewportRef.current?.getBoundingClientRect();
+    const center = rect
+      ? toWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+      : { x: 400, y: 300 };
+    const cx = Math.round(center.x);
+    const cy = Math.round(center.y);
+    const brainId = uid();
+    const highlights = [
+      { id: "amyg", label: "Amygdala", color: "pink" as Color },
+      { id: "hipp", label: "Hippocampus", color: "green" as Color },
+      { id: "pfc",  label: "Prefrontal kortex", color: "blue" as Color },
+      { id: "cere", label: "Cerebellum", color: "yellow" as Color },
+      { id: "thal", label: "Thalamus", color: "lilac" as Color },
+    ];
+    const brain: BrainItem = {
+      id: brainId,
+      type: "brain",
+      x: cx - 200, y: cy - 180,
+      w: 400, h: 360,
+      color: "cream",
+      title: "HJÄRNKARTA",
+      subtitle: "Noder & nätverk",
+      highlights,
+    };
+    const attrs: { tag: string; title: string; body: string; color: Color; dx: number; dy: number }[] = [
+      { tag: "EMOTION",    title: "Amygdala",          body: "Rädsla, hot- och belöningsbearbetning.",            color: "pink",   dx: -460, dy: -240 },
+      { tag: "MINNE",      title: "Hippocampus",       body: "Konsolidering av långtidsminnen, LTP.",             color: "green",  dx:  340, dy: -240 },
+      { tag: "EXEKUTIV",   title: "Prefrontal kortex", body: "Beslut, planering, impulskontroll.",                color: "blue",   dx: -460, dy:  240 },
+      { tag: "MOTORIK",    title: "Cerebellum",        body: "Finmotorik, balans, motorisk inlärning.",            color: "yellow", dx:  340, dy:  240 },
+      { tag: "RELÄ",       title: "Thalamus",          body: "Sensorisk relästation till cortex.",                 color: "lilac",  dx:  -60, dy:  340 },
+    ];
+    const nodes: NodeItem[] = attrs.map(a => ({
+      id: uid(),
+      type: "node",
+      x: cx + a.dx, y: cy + a.dy,
+      w: 220, h: 96,
+      color: a.color,
+      tag: a.tag, title: a.title, body: a.body,
+    }));
+    const connectors: ConnectorItem[] = nodes.map(n => ({
+      id: uid(), type: "connector", from: n.id, to: brainId, color: "ink",
+    }));
+    commit(its => [...its, brain, ...nodes, ...connectors]);
+    setSelected([brainId]);
+    setTool("select");
+  };
+
   const TEMPLATES = [
     { id: "profile", label: "Profil", hint: "PR", insert: insertProfileTemplate },
+    { id: "brain", label: "Hjärna", hint: "BR", insert: insertBrainTemplate },
   ];
 
   const TOOLS = [
@@ -507,6 +623,27 @@ function WorkspacePage() {
                           <li key={i} className={`ws-profile-stat color-${s.color}`}>
                             <span className="ws-profile-stat-label">{s.label}</span>
                             <span className="ws-profile-stat-value">{s.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
+                if (it.type === "brain") {
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown}>
+                      <div className="ws-brain-head">
+                        <span className="ws-brain-tag">{it.title}</span>
+                        <span className="ws-brain-sub">{it.subtitle}</span>
+                      </div>
+                      <div className="ws-brain-canvas" aria-hidden="true">
+                        <BrainSvg highlights={it.highlights} />
+                      </div>
+                      <ul className="ws-brain-legend">
+                        {it.highlights.map(h => (
+                          <li key={h.id} className={`ws-brain-leg color-${h.color}`}>
+                            <span className="ws-brain-leg-dot" />
+                            <span className="ws-brain-leg-label">{h.label}</span>
                           </li>
                         ))}
                       </ul>
@@ -864,6 +1001,30 @@ const css = `
 .ws-profile-stat-value { font-weight: 700; }
 
 .ws-side-templates { list-style: none; padding: 0; margin: 8px 0 4px; display: flex; flex-direction: column; gap: 8px; }
+.ws-brain {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 14px 14px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.ws-brain-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ws-brain-tag { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; color: #2f8576; }
+.ws-brain-sub { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(26,26,26,0.55); }
+.ws-brain-canvas { flex: 1; min-height: 0; background: #efece2; border: 1.5px solid var(--ink); border-radius: 14px; padding: 6px; overflow: hidden; display: grid; place-items: center; }
+.ws-brain-canvas svg { display: block; width: 100%; height: 100%; }
+.ws-brain-legend { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+.ws-brain-leg { display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--ink); }
+.ws-brain-leg-dot { width: 8px; height: 8px; border-radius: 999px; border: 1px solid var(--ink); display: inline-block; }
+.ws-brain-leg.color-yellow .ws-brain-leg-dot { background: #e0b94a; }
+.ws-brain-leg.color-pink   .ws-brain-leg-dot { background: #cc4a6a; }
+.ws-brain-leg.color-blue   .ws-brain-leg-dot { background: #2255cc; }
+.ws-brain-leg.color-green  .ws-brain-leg-dot { background: #226633; }
+.ws-brain-leg.color-lilac  .ws-brain-leg-dot { background: #7a5fc7; }
+.ws-brain-leg.color-cream  .ws-brain-leg-dot { background: #f5f1e8; }
+.ws-brain-leg.color-ink    .ws-brain-leg-dot { background: #1a1a1a; }
+
 .ws-template-card {
   width: 100%; display: flex; align-items: center; gap: 10px;
   padding: 8px; border: 2px solid var(--ink); border-radius: 12px;
