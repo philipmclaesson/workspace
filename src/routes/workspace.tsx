@@ -251,6 +251,8 @@ function WorkspacePage() {
   const [sideCollapsed, setSideCollapsed] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [pdfOpenId, setPdfOpenId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -1077,6 +1079,107 @@ function WorkspacePage() {
             </button>
           )}
 
+          {!searchOpen && (
+            <button
+              type="button"
+              className="ws-search-toggle"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Öppna sök"
+              title="Sök i workspace"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+            </button>
+          )}
+
+          {searchOpen && (() => {
+            const q = searchQuery.trim().toLowerCase();
+            type Hit = { id: string; title: string; snippet: string; kind: string; target: { itemId?: string; section?: SectionId } };
+            const hits: Hit[] = [];
+            if (q) {
+              const snippet = (s: string) => {
+                const i = s.toLowerCase().indexOf(q);
+                if (i < 0) return s.slice(0, 80);
+                const start = Math.max(0, i - 25);
+                return (start > 0 ? "…" : "") + s.slice(start, start + 90);
+              };
+              for (const it of items) {
+                if (it.type === "sticky" && it.text.toLowerCase().includes(q)) hits.push({ id: it.id, title: "Notis", snippet: snippet(it.text), kind: "sticky", target: { itemId: it.id } });
+                else if (it.type === "text" && it.text.toLowerCase().includes(q)) hits.push({ id: it.id, title: "Text", snippet: snippet(it.text), kind: "text", target: { itemId: it.id } });
+                else if (it.type === "node") {
+                  const blob = `${it.title} ${it.body}`;
+                  if (blob.toLowerCase().includes(q)) hits.push({ id: it.id, title: it.title || "Modul", snippet: snippet(it.body || it.title), kind: it.tag || "Modul", target: { itemId: it.id } });
+                }
+                else if (it.type === "profile") {
+                  const blob = `${it.name} ${it.role} ${it.stats.map(s => s.label + " " + s.value).join(" ")}`;
+                  if (blob.toLowerCase().includes(q)) hits.push({ id: it.id, title: it.name, snippet: snippet(blob), kind: "Profil", target: { itemId: it.id } });
+                }
+                else if (it.type === "brain") {
+                  const blob = `${it.title} ${it.subtitle} ${it.highlights.map(h => h.label).join(" ")}`;
+                  if (blob.toLowerCase().includes(q)) hits.push({ id: it.id, title: it.title, snippet: snippet(blob), kind: "Hjärna", target: { itemId: it.id } });
+                }
+                else if (it.type === "pdf" && it.name.toLowerCase().includes(q)) hits.push({ id: it.id, title: it.name, snippet: "PDF-fil", kind: "PDF", target: { itemId: it.id } });
+              }
+              for (const sec of SECTIONS) {
+                const text = notes[sec.id] ?? "";
+                if (text.toLowerCase().includes(q)) hits.push({ id: `note-${sec.id}`, title: sec.label, snippet: snippet(text), kind: "Anteckning", target: { section: sec.id } });
+              }
+            }
+            const focusItem = (id: string) => {
+              const it = items.find(x => x.id === id);
+              if (!it || it.type === "connector") return;
+              const rect = viewportRef.current?.getBoundingClientRect();
+              if (!rect) return;
+              const s = scale;
+              const cx = it.x + it.w / 2;
+              const cy = it.y + it.h / 2;
+              setPan({ x: rect.width / 2 - cx * s, y: rect.height / 2 - cy * s });
+              setSelected([id]);
+            };
+            return (
+              <div className="ws-search" role="dialog" aria-label="Sök">
+                <div className="ws-search-head">
+                  <div>
+                    <div className="ws-chat-label">SÖK</div>
+                    <h3 className="ws-chat-title">Hitta i workspace</h3>
+                  </div>
+                  <button type="button" className="ws-chat-close" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} aria-label="Stäng sök">×</button>
+                </div>
+                <div className="ws-search-field">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Sök ord eller innehåll…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div className="ws-search-results">
+                  {!q && <div className="ws-search-empty">Skriv för att söka i moduler, notiser, texter och anteckningar.</div>}
+                  {q && hits.length === 0 && <div className="ws-search-empty">Inga träffar för "{searchQuery}".</div>}
+                  {hits.map(h => (
+                    <button
+                      key={h.id}
+                      type="button"
+                      className="ws-search-hit"
+                      onClick={() => {
+                        if (h.target.itemId) focusItem(h.target.itemId);
+                        else if (h.target.section) { setActive(h.target.section); setShowNotes(true); }
+                      }}
+                    >
+                      <span className="ws-search-kind">{h.kind}</span>
+                      <span className="ws-search-title">{h.title}</span>
+                      <span className="ws-search-snippet">{h.snippet}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           <WorkspaceChat
             open={chatOpen}
             onClose={() => setChatOpen(false)}
@@ -1608,6 +1711,75 @@ const css = `
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
 }
 .ws-chat-toggle:hover { background: var(--green); transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
+
+/* Search */
+.ws-search-toggle {
+  position: absolute; top: 48px; right: 80px;
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border: 2px solid var(--ink); border-radius: 14px;
+  background: var(--cream); color: var(--ink); cursor: pointer;
+  box-shadow: 4px 4px 0 var(--ink);
+  z-index: 5;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+.ws-search-toggle:hover { background: var(--yellow); transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
+
+.ws-search {
+  position: absolute; top: 48px; left: 24px; bottom: 48px;
+  width: min(340px, 86vw);
+  background: var(--cream);
+  border: 2px solid var(--ink); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  display: flex; flex-direction: column;
+  z-index: 6;
+  overflow: hidden;
+}
+.ws-search-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 2px solid var(--ink);
+}
+.ws-search-field {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--ink);
+  background: #fff;
+}
+.ws-search-field input {
+  flex: 1; border: 0; outline: none; background: transparent;
+  font-family: 'Space Mono', monospace; font-size: 13px; color: var(--ink);
+}
+.ws-search-results {
+  flex: 1; overflow-y: auto; padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.ws-search-empty {
+  padding: 18px 12px; font-size: 12px; color: var(--ink); opacity: 0.6;
+  font-family: 'Space Mono', monospace;
+}
+.ws-search-hit {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto;
+  gap: 2px 10px; padding: 10px 12px;
+  background: #fff; border: 2px solid var(--ink); border-radius: 8px;
+  cursor: pointer; text-align: left;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.ws-search-hit:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
+.ws-search-kind {
+  grid-row: 1; grid-column: 1;
+  font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.18em;
+  color: var(--coral); align-self: center; text-transform: uppercase;
+}
+.ws-search-title {
+  grid-row: 1; grid-column: 2;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink);
+}
+.ws-search-snippet {
+  grid-row: 2; grid-column: 1 / -1;
+  font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink); opacity: 0.7;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 .ws-chat {
   position: absolute; top: 48px; right: 24px; bottom: 48px;
