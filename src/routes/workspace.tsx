@@ -404,43 +404,9 @@ function WorkspacePage() {
           {!sideCollapsed && (
             <>
               <div className="ws-side-divider" />
-              <div className="ws-side-label">TEMPLATES</div>
-              <ul className="ws-side-templates">
-                {TEMPLATES.map(t => (
-                  <li key={t.id}>
-                    <button type="button" className="ws-template-card" onClick={t.insert} title={`Lägg in template: ${t.label}`}>
-                      <span className="ws-template-thumb" aria-hidden="true">
-                        <span className="ws-template-thumb-face" />
-                        <span className="ws-template-thumb-bar ws-tt-green" />
-                        <span className="ws-template-thumb-bar ws-tt-pink" />
-                        <span className="ws-template-thumb-bar ws-tt-yellow" />
-                      </span>
-                      <span className="ws-template-meta">
-                        <span className="ws-template-name">{t.label}</span>
-                        <span className="ws-template-desc">Profilkort + 4 noder</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <div className="ws-side-divider" />
               <button type="button" className="ws-side-notes-btn" onClick={() => setShowNotes(v => !v)}>
                 {showNotes ? "DÖLJ ANTECKNINGAR" : "VISA ANTECKNINGAR"}
               </button>
-            </>
-          )}
-          {sideCollapsed && (
-            <>
-              <div className="ws-side-divider" />
-              {TEMPLATES.map(t => (
-                <button key={t.id} type="button" className="ws-side-item" onClick={t.insert} title={t.label} style={{ padding: "8px 0", justifyContent: "center", fontSize: 12 }}>
-                  <span className="ws-side-hint">{t.hint}</span>
-                </button>
-              ))}
-            </>
-          )}
-          {!sideCollapsed && (
-            <>
               {showNotes && (
                 <textarea
                   className="ws-side-notes"
