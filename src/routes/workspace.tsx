@@ -285,7 +285,7 @@ const css = `
   background: transparent;
   overflow: hidden;
   min-height: calc(100vh - 140px);
-  padding: 28px 32px;
+  padding: 28px 32px 28px calc(clamp(20px, 4vw, 48px) + 280px + 72px);
 }
 .ws-grid {
   position: absolute; inset: 0;
@@ -294,7 +294,7 @@ const css = `
   background-position: 0 0;
   pointer-events: none;
 }
-.ws-canvas-head { position: relative; max-width: 560px; margin: 0 0 32px 64px; }
+.ws-canvas-head { position: relative; max-width: 560px; margin: 0 0 32px 0; }
 .ws-eyebrow {
   font-family: 'Space Mono', monospace; font-size: 11px;
   letter-spacing: 0.2em; color: var(--coral); text-transform: uppercase;
