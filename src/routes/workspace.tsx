@@ -331,7 +331,7 @@ const css = `
 .ws-sidebar {
   position: absolute;
   top: 24px;
-  left: 0;
+  left: 24px;
   width: 280px;
   z-index: 4;
   background: var(--cream);
@@ -380,14 +380,26 @@ const css = `
   background: transparent;
   overflow: hidden;
   min-height: calc(100vh - 140px);
-  padding: 28px 0 28px calc(280px + 72px);
+  padding: 28px 0 28px calc(280px + 24px + 72px);
 }
+.ws-viewport {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+}
+.ws-viewport.is-adding { cursor: crosshair; }
 .ws-grid {
   position: absolute; inset: 0;
   background-image: radial-gradient(rgba(26,26,26,0.22) 1.2px, transparent 1.2px);
-  background-size: 22px 22px;
-  background-position: 0 0;
   pointer-events: none;
+}
+.ws-world {
+  position: absolute;
+  left: 0; top: 0;
+  width: 1px; height: 1px;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 .ws-canvas-head { position: relative; max-width: 560px; margin: 0 0 32px 0; }
 .ws-eyebrow {
@@ -402,7 +414,8 @@ const css = `
 .ws-sub { font-size: 16px; color: #3a3a3a; max-width: 48ch; margin: 0; }
 
 .ws-edges {
-  position: absolute; inset: 0; width: 100%; height: 100%;
+  position: absolute; left: 0; top: 0;
+  overflow: visible;
   pointer-events: none;
 }
 .ws-edge {
@@ -421,7 +434,8 @@ const css = `
   cursor: grab;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-.ws-node:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
+.ws-node:hover { box-shadow: 6px 6px 0 var(--ink); }
+.ws-node:active { cursor: grabbing; }
 .ws-node h3 {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 22px; margin: 6px 0 4px; letter-spacing: 0.03em;
@@ -465,7 +479,7 @@ const css = `
 .ws-tool-sep { height: 1px; background: rgba(26,26,26,0.18); margin: 4px 4px; }
 
 .ws-zoom {
-  position: absolute; right: 0; bottom: 22px;
+  position: absolute; right: 24px; bottom: 24px;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 10px 8px;
   background: var(--cream);
