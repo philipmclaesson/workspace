@@ -142,6 +142,7 @@ function BrainSvg({ highlights }: { highlights: { id: string; label: string; col
 type DragState =
   | { type: "pan"; startX: number; startY: number; origPan: { x: number; y: number } }
   | { type: "move"; startX: number; startY: number; ids: string[]; origs: Record<string, { x: number; y: number }>; scale: number; snapshot: Item[] }
+  | { type: "rewire"; connId: string; end: "from" | "to"; snapshot: Item[] }
   | null;
 
 function WorkspacePage() {
@@ -172,6 +173,9 @@ function WorkspacePage() {
   const histRef = useRef<Record<string, { past: Item[][]; future: Item[][] }>>({});
   const activeModuleRef = useRef<string | null>(null);
   useEffect(() => { activeModuleRef.current = activeModule; }, [activeModule]);
+  const itemsByModuleRef = useRef<Record<string, Item[]>>({});
+  useEffect(() => { itemsByModuleRef.current = itemsByModule; }, [itemsByModule]);
+  const rewireGhostRef = useRef<{ x: number; y: number; hoverId: string | null } | null>(null);
   const getHist = (mod: string) => {
     if (!histRef.current[mod]) histRef.current[mod] = { past: [], future: [] };
     return histRef.current[mod];
@@ -250,6 +254,8 @@ function WorkspacePage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
+  const [rewireGhost, setRewireGhost] = useState<{ x: number; y: number; hoverId: string | null } | null>(null);
+  useEffect(() => { rewireGhostRef.current = rewireGhost; }, [rewireGhost]);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState>(null);
@@ -351,11 +357,13 @@ function WorkspacePage() {
     const onMove = (e: MouseEvent) => {
       const d = dragRef.current;
       if (!d) return;
-      const dx = e.clientX - d.startX;
-      const dy = e.clientY - d.startY;
       if (d.type === "pan") {
+        const dx = e.clientX - d.startX;
+        const dy = e.clientY - d.startY;
         setPan({ x: d.origPan.x + dx, y: d.origPan.y + dy });
-      } else {
+      } else if (d.type === "move") {
+        const dx = e.clientX - d.startX;
+        const dy = e.clientY - d.startY;
         const s = d.scale;
         const mod = activeModuleRef.current;
         if (!mod) return;
@@ -369,6 +377,23 @@ function WorkspacePage() {
             }),
           };
         });
+      } else if (d.type === "rewire") {
+        const rect = viewportRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const wx = (e.clientX - rect.left - pan.x) / scale;
+        const wy = (e.clientY - rect.top - pan.y) / scale;
+        const mod = activeModuleRef.current;
+        const cur = mod ? (itemsByModuleRef.current[mod] ?? []) : [];
+        const conn = cur.find(it => it.id === d.connId);
+        const otherEnd = conn && conn.type === "connector" ? (d.end === "from" ? conn.to : conn.from) : null;
+        let hover: string | null = null;
+        for (let i = cur.length - 1; i >= 0; i--) {
+          const it = cur[i];
+          if (it.type === "connector") continue;
+          if (it.id === otherEnd) continue;
+          if (wx >= it.x && wx <= it.x + it.w && wy >= it.y && wy <= it.y + it.h) { hover = it.id; break; }
+        }
+        setRewireGhost({ x: wx, y: wy, hoverId: hover });
       }
     };
     const onUp = () => {
@@ -382,13 +407,35 @@ function WorkspacePage() {
           h.future = [];
         }
       }
+      if (d?.type === "rewire") {
+        const ghost = rewireGhostRef.current;
+        const mod = activeModuleRef.current;
+        if (mod && ghost && ghost.hoverId) {
+          const target = ghost.hoverId;
+          const end = d.end;
+          setItemsByModule(prev => {
+            const cur = prev[mod] ?? [];
+            const next = cur.map(it => {
+              if (it.id !== d.connId || it.type !== "connector") return it;
+              return end === "from" ? { ...it, from: target } : { ...it, to: target };
+            });
+            const h = getHist(mod);
+            h.past.push(d.snapshot);
+            if (h.past.length > 80) h.past.shift();
+            h.future = [];
+            return { ...prev, [mod]: next };
+          });
+        }
+        setRewireGhost(null);
+      }
       dragRef.current = null;
       document.body.style.cursor = "";
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pan.x, pan.y, scale]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -651,14 +698,74 @@ function WorkspacePage() {
                   const a = itemsMap.get(c.from);
                   const b = itemsMap.get(c.to);
                   if (!a || !b || a.type === "connector" || b.type === "connector") return null;
-                  const ax = a.x + a.w / 2 + 2000, ay = a.y + a.h / 2 + 2000;
-                  const bx = b.x + b.w / 2 + 2000, by = b.y + b.h / 2 + 2000;
+                  const ghost = rewireGhost && dragRef.current?.type === "rewire" && dragRef.current.connId === c.id ? dragRef.current : null;
+                  let ax = a.x + a.w / 2 + 2000, ay = a.y + a.h / 2 + 2000;
+                  let bx = b.x + b.w / 2 + 2000, by = b.y + b.h / 2 + 2000;
+                  if (ghost && rewireGhost) {
+                    if (ghost.end === "from") { ax = rewireGhost.x + 2000; ay = rewireGhost.y + 2000; }
+                    else { bx = rewireGhost.x + 2000; by = rewireGhost.y + 2000; }
+                  }
                   const cx = (ax + bx) / 2;
+                  const mx = (ax + bx) / 2, my = (ay + by) / 2;
                   const sel = selected.includes(c.id);
                   return (
-                    <g key={c.id} style={{ pointerEvents: "auto", cursor: "pointer" }} onMouseDown={(e) => { e.stopPropagation(); setSelected([c.id]); }}>
-                      <path d={`M ${ax} ${ay} C ${cx} ${ay}, ${cx} ${by}, ${bx} ${by}`} fill="none" stroke={COLOR_HEX[c.color]} strokeWidth={sel ? 3 : 2} strokeDasharray={sel ? "0" : "4 5"} opacity={sel ? 1 : 0.7} />
-                      <circle cx={bx} cy={by} r={5} fill={COLOR_HEX[c.color]} />
+                    <g key={c.id}>
+                      {/* Wide invisible hit area */}
+                      <path
+                        d={`M ${ax} ${ay} C ${cx} ${ay}, ${cx} ${by}, ${bx} ${by}`}
+                        fill="none" stroke="transparent" strokeWidth={18}
+                        style={{ pointerEvents: "stroke", cursor: "pointer" }}
+                        onMouseDown={(e) => { e.stopPropagation(); setSelected([c.id]); setEditingId(null); }}
+                      />
+                      <path
+                        d={`M ${ax} ${ay} C ${cx} ${ay}, ${cx} ${by}, ${bx} ${by}`}
+                        fill="none" stroke={COLOR_HEX[c.color]} strokeWidth={sel ? 3 : 2}
+                        strokeDasharray={sel ? "0" : "4 5"} opacity={sel ? 1 : 0.7}
+                        style={{ pointerEvents: "none" }}
+                      />
+                      <circle cx={bx} cy={by} r={5} fill={COLOR_HEX[c.color]} style={{ pointerEvents: "none" }} />
+                      {sel && (
+                        <>
+                          {/* Endpoint handles — drag to re-route */}
+                          <circle
+                            cx={ax} cy={ay} r={8}
+                            fill="#fff" stroke={COLOR_HEX[c.color]} strokeWidth={2}
+                            style={{ pointerEvents: "all", cursor: "grab" }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              dragRef.current = { type: "rewire", connId: c.id, end: "from", snapshot: items };
+                              setRewireGhost({ x: ax - 2000, y: ay - 2000, hoverId: null });
+                              document.body.style.cursor = "grabbing";
+                            }}
+                          />
+                          <circle
+                            cx={bx} cy={by} r={8}
+                            fill="#fff" stroke={COLOR_HEX[c.color]} strokeWidth={2}
+                            style={{ pointerEvents: "all", cursor: "grab" }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              dragRef.current = { type: "rewire", connId: c.id, end: "to", snapshot: items };
+                              setRewireGhost({ x: bx - 2000, y: by - 2000, hoverId: null });
+                              document.body.style.cursor = "grabbing";
+                            }}
+                          />
+                          {/* Delete button at midpoint */}
+                          <g
+                            style={{ pointerEvents: "all", cursor: "pointer" }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              commit(its => its.filter(it => it.id !== c.id));
+                              setSelected([]);
+                            }}
+                          >
+                            <circle cx={mx} cy={my} r={11} fill="#fff" stroke="#cc4a6a" strokeWidth={2} />
+                            <path d={`M ${mx - 4} ${my - 4} L ${mx + 4} ${my + 4} M ${mx + 4} ${my - 4} L ${mx - 4} ${my + 4}`} stroke="#cc4a6a" strokeWidth={2} strokeLinecap="round" />
+                          </g>
+                        </>
+                      )}
+                      {ghost && rewireGhost && rewireGhost.hoverId && (
+                        <circle cx={ghost.end === "from" ? ax : bx} cy={ghost.end === "from" ? ay : by} r={12} fill="none" stroke="#3f8f81" strokeWidth={2} strokeDasharray="3 3" style={{ pointerEvents: "none" }} />
+                      )}
                     </g>
                   );
                 })}
