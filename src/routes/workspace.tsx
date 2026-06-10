@@ -1281,7 +1281,7 @@ const css = `
 .ws-chat-toggle:hover { background: var(--green); transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
 
 .ws-chat {
-  position: absolute; top: 48px; right: 24px; bottom: 20px;
+  position: absolute; top: 48px; right: 24px; bottom: 48px;
   width: min(380px, 92vw);
   background: var(--cream);
   border: 2px solid var(--ink); border-radius: 14px;
