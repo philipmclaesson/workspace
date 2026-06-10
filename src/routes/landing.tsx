@@ -130,6 +130,7 @@ const css = `
   max-width: 980px;
   padding-top: clamp(40px, 10vh, 120px);
   padding-bottom: 4vh;
+  padding-left: clamp(90px, 12vw, 150px);
   min-height: 0;
 }
 .lp-eyebrow {
