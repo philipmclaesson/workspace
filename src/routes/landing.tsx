@@ -34,7 +34,6 @@ function LandingPage() {
       >
         <source src={bgVideo.url} type="video/mp4" />
       </video>
-      <div className="lp-bg-overlay" />
 
       <header className="lp-header">
         <a href="/landing" className="lp-logo" aria-label="FAVO">
@@ -108,12 +107,6 @@ const css = `
   object-fit: cover;
   object-position: center bottom;
   z-index: 0;
-}
-.lp-bg-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(245, 241, 232, 0.55);
-  z-index: 1;
 }
 .lp-header, .lp-hero { position: relative; z-index: 2; }
 
