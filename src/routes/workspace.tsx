@@ -281,20 +281,16 @@ const css = `
 
 .ws-canvas {
   position: relative;
-  background: #ffffff;
-  border: 2px solid var(--ink);
-  border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--ink);
+  background: transparent;
   overflow: hidden;
-  min-height: 720px;
-  padding: 32px 36px;
+  min-height: calc(100vh - 140px);
+  padding: 28px 32px;
 }
 .ws-grid {
   position: absolute; inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(26,26,26,0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(26,26,26,0.07) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: radial-gradient(rgba(26,26,26,0.22) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+  background-position: 0 0;
   pointer-events: none;
 }
 .ws-canvas-head { position: relative; max-width: 560px; margin: 0 0 32px 64px; }
