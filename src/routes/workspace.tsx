@@ -173,6 +173,9 @@ function WorkspacePage() {
   const histRef = useRef<Record<string, { past: Item[][]; future: Item[][] }>>({});
   const activeModuleRef = useRef<string | null>(null);
   useEffect(() => { activeModuleRef.current = activeModule; }, [activeModule]);
+  const itemsByModuleRef = useRef<Record<string, Item[]>>({});
+  useEffect(() => { itemsByModuleRef.current = itemsByModule; }, [itemsByModule]);
+  const rewireGhostRef = useRef<{ x: number; y: number; hoverId: string | null } | null>(null);
   const getHist = (mod: string) => {
     if (!histRef.current[mod]) histRef.current[mod] = { past: [], future: [] };
     return histRef.current[mod];
