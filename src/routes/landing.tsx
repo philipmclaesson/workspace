@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import favoLogo from "@/assets/favo-logo.png.asset.json";
+import bgImage from "@/assets/landing-bg.png.asset.json";
+import bgVideo from "@/assets/landing-bg.mp4.asset.json";
 
 export const Route = createFileRoute("/landing")({
   head: () => ({
@@ -21,6 +23,18 @@ function LandingPage() {
         rel="stylesheet"
       />
       <style>{css}</style>
+
+      <video
+        className="lp-bg-video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        poster={bgImage.url}
+      >
+        <source src={bgVideo.url} type="video/mp4" />
+      </video>
+      <div className="lp-bg-overlay" />
 
       <header className="lp-header">
         <a href="/landing" className="lp-logo" aria-label="FAVO">
