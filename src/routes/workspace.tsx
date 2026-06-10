@@ -489,10 +489,11 @@ function WorkspacePage() {
       <style>{css}</style>
 
       <header className="ws-header">
-        <a href="/" className="ws-logo">BRACKET</a>
+        <a href="/" className="ws-logo" aria-label="FAVO">
+          <img src="/__l5e/assets-v1/ac7e7e14-74c2-45d0-91ec-e344a34cd64d/favo-logo.png" alt="FAVO" className="ws-logo-img" />
+        </a>
         <nav className="ws-nav">
           <a href="/">Bracket</a>
-          <a href="/hjarna">Hjärna</a>
           <a href="/workspace" className="ws-nav-active">Workspace</a>
           <a href="#login" className="ws-nav-login">Login</a>
         </nav>
