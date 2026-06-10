@@ -600,13 +600,6 @@ function WorkspacePage() {
             onMouseDown={onCanvasMouseDown}
           >
             <div className="ws-grid" aria-hidden="true" style={{ backgroundSize: `${22 * scale}px ${22 * scale}px`, backgroundPosition: `${pan.x}px ${pan.y}px` }} />
-            {!activeModule && (
-              <div className="ws-empty">
-                <div className="ws-empty-label">VÄLJ DELKURS</div>
-                <h2 className="ws-empty-title">Öppna en delkurs för att börja</h2>
-                <p className="ws-empty-sub">Varje delkurs har sitt eget workspace med egna anteckningar, noder och kopplingar.</p>
-              </div>
-            )}
             <div className="ws-world" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}>
               <svg className="ws-edges" aria-hidden="true" width="6000" height="4000" style={{ left: -2000, top: -2000 }}>
                 {items.filter((it): it is ConnectorItem => it.type === "connector").map(c => {
