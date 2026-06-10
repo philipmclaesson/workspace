@@ -715,7 +715,7 @@ const css = `
   --cream: #f5f1e8;
   --ink: #1a1a1a;
   --coral: #cc3a1e;
-  --green: #226633;
+  --green: #4ec07a;
   --teal: #3f8f81;
   --blue: #2255cc;
   --lilac: #b6a8e8;
@@ -823,7 +823,7 @@ const css = `
 .ws-sidebar.is-collapsed .ws-side-hint { opacity: 1; }
 .ws-sidebar.is-collapsed .ws-side-add { padding: 8px 0; font-size: 16px; border-style: solid; }
 .ws-side-item:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
-.ws-side-item.is-active { background: var(--green); color: #f5f1e8; }
+.ws-side-item.is-active { background: var(--green); color: #0a2a14; }
 .ws-side-hint { font-family: 'Space Mono', monospace; font-size: 11px; opacity: 0.7; }
 .ws-side-add {
   width: 100%; padding: 10px; border: 2px dashed var(--ink); border-radius: 14px;
