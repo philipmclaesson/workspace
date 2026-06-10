@@ -55,7 +55,8 @@ type ConnectorItem = { id: string; type: "connector"; from: string; to: string; 
 type ProfileStat = { label: string; value: string; color: Color };
 type ProfileItem = Base & { type: "profile"; name: string; role: string; stats: ProfileStat[] };
 type BrainItem = Base & { type: "brain"; title: string; subtitle: string; highlights: { id: string; label: string; color: Color }[] };
-type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem | ProfileItem | BrainItem;
+type PdfItem = Base & { type: "pdf"; name: string; dataUrl: string };
+type Item = StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ConnectorItem | ProfileItem | BrainItem | PdfItem;
 
 const INITIAL_ITEMS: Item[] = [
   { id: "n1", type: "node", x: 60, y: 80, w: 220, h: 100, color: "pink", tag: "NEURON", title: "Aktionspotential", body: "Na⁺ in, K⁺ ut. Tröskel ≈ −55 mV." },
@@ -68,7 +69,7 @@ const INITIAL_ITEMS: Item[] = [
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem | BrainItem => it.type !== "connector";
+const isShape = (it: Item): it is StickyItem | TextItem | NodeItem | RectItem | EllipseItem | ProfileItem | BrainItem | PdfItem => it.type !== "connector";
 
 // ---- Brain hemisphere illustration (Salvia theme) ----
 const SALVIA = "#3f8f81";
@@ -246,6 +247,7 @@ function WorkspacePage() {
     if (tool === "node") return { id: uid(), type: "node", x: w.x - 110, y: w.y - 50, w: 220, h: 100, color: "cream", tag: "MODUL", title: "Ny modul", body: "Dubbelklicka för att redigera" };
     if (tool === "rect") return { id: uid(), type: "rect", x: w.x - 80, y: w.y - 50, w: 160, h: 100, color: "blue" };
     if (tool === "ellipse") return { id: uid(), type: "ellipse", x: w.x - 80, y: w.y - 50, w: 160, h: 100, color: "pink" };
+    if (tool === "pdf") return { id: uid(), type: "pdf", x: w.x - 110, y: w.y - 70, w: 220, h: 140, color: "cream", name: "", dataUrl: "" };
     return null;
   };
 
@@ -523,6 +525,7 @@ function WorkspacePage() {
     { id: "rect", label: "Rektangel (R)" },
     { id: "ellipse", label: "Ellips (O)" },
     { id: "connector", label: "Koppling (C)" },
+    { id: "pdf", label: "Ladda upp PDF (P)" },
   ];
   const TOOL_ICONS: Record<string, React.ReactNode> = {
     select: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>,
@@ -532,6 +535,7 @@ function WorkspacePage() {
     rect: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>,
     ellipse: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="12" rx="8" ry="6"/></svg>,
     connector: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><path d="M7.5 12h9"/></svg>,
+    pdf: <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 17h4"/></svg>,
   };
 
   const selectedItem = selected.length === 1 ? itemsMap.get(selected[0]) ?? null : null;
@@ -670,6 +674,46 @@ function WorkspacePage() {
                 }
                 if (it.type === "rect") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
                 if (it.type === "ellipse") return <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} />;
+                if (it.type === "pdf") {
+                  const handleFile = (file: File | undefined) => {
+                    if (!file) return;
+                    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) return;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const dataUrl = String(reader.result || "");
+                      updateItem(it.id, { name: file.name, dataUrl } as Partial<Item>);
+                    };
+                    reader.readAsDataURL(file);
+                  };
+                  return (
+                    <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown}>
+                      {it.dataUrl ? (
+                        <>
+                          <div className="ws-pdf-head">
+                            <span className="ws-pdf-tag">PDF</span>
+                            <span className="ws-pdf-name" title={it.name}>{it.name}</span>
+                            <a className="ws-pdf-open" href={it.dataUrl} target="_blank" rel="noreferrer" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>Öppna</a>
+                          </div>
+                          <object className="ws-pdf-frame" data={it.dataUrl} type="application/pdf" aria-label={it.name}>
+                            <div className="ws-pdf-fallback">Förhandsvisning ej tillgänglig</div>
+                          </object>
+                        </>
+                      ) : (
+                        <label className="ws-pdf-drop" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                          <span className="ws-pdf-tag">PDF</span>
+                          <span className="ws-pdf-cta">Välj PDF-fil</span>
+                          <span className="ws-pdf-hint">eller släpp filen här</span>
+                          <input
+                            type="file"
+                            accept="application/pdf,.pdf"
+                            className="ws-pdf-input"
+                            onChange={(e) => handleFile(e.target.files?.[0])}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  );
+                }
                 if (it.type === "profile") {
                   return (
                     <div key={it.id} className={cls} style={baseStyle} onMouseDown={onDown} onDoubleClick={onDouble}>
@@ -1366,4 +1410,39 @@ const css = `
 }
 .ws-chat-send:hover:not(:disabled) { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
 .ws-chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ws-pdf {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  overflow: hidden;
+}
+.ws-pdf.color-yellow { background: #f5d76e; }
+.ws-pdf.color-pink { background: #f1a7b0; }
+.ws-pdf.color-blue { background: #a7c4f1; }
+.ws-pdf.color-green { background: #a4d9a8; }
+.ws-pdf.color-lilac { background: #b6a8e8; }
+.ws-pdf.color-cream { background: #f5f1e8; }
+.ws-pdf.color-ink { background: #1a1a1a; color: #f5f1e8; }
+.ws-pdf-head { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
+.ws-pdf-tag {
+  font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.18em;
+  padding: 2px 8px; border: 1px solid currentColor; border-radius: 999px;
+}
+.ws-pdf-name { flex: 1; min-width: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-pdf-open { font-family: 'Space Mono', monospace; font-size: 11px; color: inherit; text-decoration: underline; cursor: pointer; }
+.ws-pdf-frame { flex: 1; width: 100%; min-height: 0; border: 1.5px solid var(--ink); border-radius: 8px; background: #efece2; }
+.ws-pdf-fallback { display: grid; place-items: center; width: 100%; height: 100%; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink); opacity: 0.6; }
+.ws-pdf-drop {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border: 2px dashed var(--ink); border-radius: 10px; padding: 18px 12px; cursor: pointer;
+  text-align: center;
+}
+.ws-pdf-drop:hover { background: rgba(26,26,26,0.04); }
+.ws-pdf-cta { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.04em; }
+.ws-pdf-hint { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em; opacity: 0.65; text-transform: uppercase; }
+.ws-pdf-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
 `;
