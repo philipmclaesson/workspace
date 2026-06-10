@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import * as React from "react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/workspace")({
@@ -24,6 +25,31 @@ const SECTIONS: { id: SectionId; label: string; hint: string }[] = [
 
 function WorkspacePage() {
   const [active, setActive] = useState<SectionId>("overview");
+  const [zoom, setZoom] = useState(100);
+  const [tool, setTool] = useState<string>("select");
+  const zoomIn = () => setZoom((z) => Math.min(200, z + 10));
+  const zoomOut = () => setZoom((z) => Math.max(30, z - 10));
+  const zoomFit = () => setZoom(100);
+  const TOOLS: { id: string; label: string; icon: React.ReactNode }[] = [
+    { id: "select", label: "Välj", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>
+    )},
+    { id: "node", label: "Lägg till nod", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+    )},
+    { id: "note", label: "Anteckning", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4"/></svg>
+    )},
+    { id: "text", label: "Text", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 5h14M12 5v14"/></svg>
+    )},
+    { id: "edge", label: "Koppling", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><path d="M7.5 12h9"/></svg>
+    )},
+    { id: "group", label: "Grupp", icon: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+    )},
+  ];
   return (
     <main className="ws-root">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -67,6 +93,28 @@ function WorkspacePage() {
 
         <section className="ws-canvas">
           <div className="ws-grid" aria-hidden="true" />
+
+          <div className="ws-toolbar" role="toolbar" aria-label="Verktyg">
+            {TOOLS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`ws-tool ${tool === t.id ? "is-active" : ""}`}
+                onClick={() => setTool(t.id)}
+                title={t.label}
+                aria-label={t.label}
+              >
+                {t.icon}
+              </button>
+            ))}
+            <div className="ws-tool-sep" />
+            <button type="button" className="ws-tool" title="Ångra" aria-label="Ångra">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 14l-5-5 5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg>
+            </button>
+            <button type="button" className="ws-tool" title="Gör om" aria-label="Gör om">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 000 10h3"/></svg>
+            </button>
+          </div>
 
           <div className="ws-canvas-head">
             <span className="ws-eyebrow">WORKSPACE · {SECTIONS.find(s => s.id === active)?.hint}</span>
@@ -119,7 +167,12 @@ function WorkspacePage() {
             <p>Hur formar LTP långtidsminnet i hippocampus?</p>
           </article>
 
-          <button type="button" className="ws-add-node">+ LÄGG TILL NOD</button>
+          <div className="ws-zoom" role="group" aria-label="Zoom">
+            <button type="button" className="ws-zoom-btn" onClick={zoomIn} aria-label="Zooma in">+</button>
+            <span className="ws-zoom-val">{zoom}%</span>
+            <button type="button" className="ws-zoom-btn" onClick={zoomOut} aria-label="Zooma ut">−</button>
+            <button type="button" className="ws-zoom-fit" onClick={zoomFit}>FIT</button>
+          </div>
         </section>
       </div>
     </main>
@@ -244,7 +297,7 @@ const css = `
   background-size: 32px 32px;
   pointer-events: none;
 }
-.ws-canvas-head { position: relative; max-width: 560px; margin-bottom: 32px; }
+.ws-canvas-head { position: relative; max-width: 560px; margin: 0 0 32px 64px; }
 .ws-eyebrow {
   font-family: 'Space Mono', monospace; font-size: 11px;
   letter-spacing: 0.2em; color: var(--coral); text-transform: uppercase;
@@ -300,18 +353,55 @@ const css = `
 .ws-node-e p { color: rgba(245,241,232,0.8); }
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
-.ws-add-node {
-  position: absolute; right: 24px; bottom: 24px;
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 14px 22px;
-  border: 2px solid var(--ink); border-radius: 999px;
-  background: #4ec07a; color: #0a2a14;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 14px;
-  cursor: pointer;
-  box-shadow: 5px 5px 0 var(--ink);
+.ws-toolbar {
+  position: absolute; left: 18px; top: 18px;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 6px;
+  background: var(--ink); border: 2px solid var(--ink); border-radius: 16px;
+  box-shadow: 4px 4px 0 rgba(26,26,26,0.25);
+  z-index: 3;
 }
-.ws-add-node:hover { transform: translate(-1px,-1px); box-shadow: 6px 6px 0 var(--ink); }
+.ws-tool {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: 10px;
+  background: transparent; color: var(--cream); cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+.ws-tool:hover { background: rgba(245,241,232,0.12); }
+.ws-tool.is-active { background: var(--cream); color: var(--ink); border-color: var(--cream); }
+.ws-tool-sep { height: 1px; background: rgba(245,241,232,0.2); margin: 4px 4px; }
+
+.ws-zoom {
+  position: absolute; right: 22px; bottom: 22px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 8px;
+  background: var(--cream);
+  border: 2px solid var(--ink); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  z-index: 3;
+}
+.ws-zoom-btn {
+  width: 34px; height: 30px;
+  border: 1px solid var(--ink); border-radius: 8px;
+  background: var(--cream); cursor: pointer;
+  font-family: 'Space Mono', monospace; font-size: 16px; line-height: 1;
+  color: var(--ink);
+}
+.ws-zoom-btn:hover { background: var(--ink); color: var(--cream); }
+.ws-zoom-val {
+  font-family: 'Space Mono', monospace; font-size: 11px;
+  letter-spacing: 0.1em; color: var(--ink);
+}
+.ws-zoom-fit {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--ink); border-radius: 8px;
+  background: var(--cream); cursor: pointer;
+  font-family: 'Space Mono', monospace; font-size: 11px;
+  letter-spacing: 0.15em; color: var(--ink);
+}
+.ws-zoom-fit:hover { background: var(--ink); color: var(--cream); }
 
 @media (max-width: 880px) {
   .ws-shell { grid-template-columns: 1fr; }
