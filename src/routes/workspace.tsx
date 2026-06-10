@@ -808,6 +808,51 @@ function WorkspacePage() {
                     </g>
                   );
                 })}
+                {/* Link handles on selected non-connector item */}
+                {(() => {
+                  if (!selectedItem || selectedItem.type === "connector") return null;
+                  const it = selectedItem;
+                  const cxX = it.x + it.w / 2 + 2000;
+                  const cxY = it.y + it.h / 2 + 2000;
+                  const handles: { x: number; y: number; key: string }[] = [
+                    { key: "t", x: cxX, y: it.y + 2000 - 2 },
+                    { key: "r", x: it.x + it.w + 2000 + 2, y: cxY },
+                    { key: "b", x: cxX, y: it.y + it.h + 2000 + 2 },
+                    { key: "l", x: it.x + 2000 - 2, y: cxY },
+                  ];
+                  const startLink = (e: React.MouseEvent, hx: number, hy: number) => {
+                    e.stopPropagation();
+                    dragRef.current = { type: "link", fromId: it.id, snapshot: items };
+                    setLinkGhost({ x: hx - 2000, y: hy - 2000, hoverId: null });
+                    document.body.style.cursor = "grabbing";
+                  };
+                  return (
+                    <g>
+                      {handles.map(h => (
+                        <g key={h.key} style={{ pointerEvents: "all", cursor: "crosshair" }} onMouseDown={(e) => startLink(e, h.x, h.y)}>
+                          <circle cx={h.x} cy={h.y} r={9} fill="#fff" stroke="#3f8f81" strokeWidth={2} />
+                          <path d={`M ${h.x - 3} ${h.y} L ${h.x + 3} ${h.y} M ${h.x} ${h.y - 3} L ${h.x} ${h.y + 3}`} stroke="#3f8f81" strokeWidth={2} strokeLinecap="round" />
+                        </g>
+                      ))}
+                    </g>
+                  );
+                })()}
+                {/* Ghost link line during link drag */}
+                {linkGhost && dragRef.current?.type === "link" && (() => {
+                  const from = itemsMap.get(dragRef.current.fromId);
+                  if (!from || from.type === "connector") return null;
+                  const ax = from.x + from.w / 2 + 2000;
+                  const ay = from.y + from.h / 2 + 2000;
+                  const bx = linkGhost.x + 2000;
+                  const by = linkGhost.y + 2000;
+                  const cx = (ax + bx) / 2;
+                  return (
+                    <g style={{ pointerEvents: "none" }}>
+                      <path d={`M ${ax} ${ay} C ${cx} ${ay}, ${cx} ${by}, ${bx} ${by}`} fill="none" stroke="#3f8f81" strokeWidth={2} strokeDasharray="5 4" />
+                      {linkGhost.hoverId && <circle cx={bx} cy={by} r={10} fill="none" stroke="#3f8f81" strokeWidth={2} />}
+                    </g>
+                  );
+                })()}
               </svg>
               {items.filter(isShape).map(it => {
                 const sel = selected.includes(it.id);
