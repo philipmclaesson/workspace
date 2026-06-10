@@ -460,7 +460,7 @@ const css = `
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
 .ws-toolbar {
-  position: absolute; left: calc(280px + 16px); top: 24px;
+  position: absolute; left: calc(24px + 280px + 16px); top: 24px;
   display: flex; flex-direction: column; gap: 6px;
   padding: 8px 6px;
   background: var(--cream); border: 2px solid var(--ink); border-radius: 14px;
