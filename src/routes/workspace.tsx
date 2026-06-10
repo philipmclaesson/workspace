@@ -107,25 +107,30 @@ function WorkspacePage() {
     document.body.style.cursor = "grabbing";
   };
 
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const rect = viewportRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const factor = e.deltaY > 0 ? 0.92 : 1.08;
-    setZoom((z) => {
-      const next = clampZoom(z * factor);
-      const oldScale = z / 100;
-      const newScale = next / 100;
-      // keep point under cursor stable
-      setPan((p) => ({
-        x: mx - ((mx - p.x) / oldScale) * newScale,
-        y: my - ((my - p.y) / oldScale) * newScale,
-      }));
-      return next;
-    });
-  };
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const factor = e.deltaY > 0 ? 0.92 : 1.08;
+      setZoom((z) => {
+        const next = clampZoom(z * factor);
+        const oldScale = z / 100;
+        const newScale = next / 100;
+        setPan((p) => ({
+          x: mx - ((mx - p.x) / oldScale) * newScale,
+          y: my - ((my - p.y) / oldScale) * newScale,
+        }));
+        return next;
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
 
   const TOOLS: { id: string; label: string; icon: React.ReactNode }[] = [
     { id: "select", label: "Välj", icon: (
