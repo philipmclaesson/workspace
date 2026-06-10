@@ -788,7 +788,7 @@ const css = `
 }
 .ws-sidebar.is-collapsed { padding: 8px 6px; }
 .ws-side-toggle {
-  position: absolute; top: -10px; right: -10px;
+  position: absolute; top: 8px; right: 8px;
   width: 26px; height: 26px;
   display: grid; place-items: center;
   border: 2px solid var(--ink); border-radius: 999px;
