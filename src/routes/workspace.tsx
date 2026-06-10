@@ -29,7 +29,7 @@ function WorkspacePage() {
   const zoomIn = () => setZoom((z) => Math.min(200, z + 10));
   const zoomOut = () => setZoom((z) => Math.max(30, z - 10));
   const zoomFit = () => setZoom(100);
-  const TOOLS: { id: string; label: string; icon: JSX.Element }[] = [
+  const TOOLS: { id: string; label: string; icon: React.ReactNode }[] = [
     { id: "select", label: "Välj", icon: (
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>
     )},
