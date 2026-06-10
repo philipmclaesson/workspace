@@ -257,15 +257,6 @@ function WorkspacePage() {
             </button>
           </div>
 
-          <div className="ws-canvas-head">
-            <span className="ws-eyebrow">WORKSPACE · {SECTIONS.find(s => s.id === active)?.hint}</span>
-            <h1 className="ws-title">{SECTIONS.find(s => s.id === active)?.label.toUpperCase()}</h1>
-            <p className="ws-sub">
-              Samla allt på ett ställe. Koppla ihop noder, anteckningar och
-              begrepp till ett växande nätverk.
-            </p>
-          </div>
-
           <div className="ws-zoom" role="group" aria-label="Zoom">
             <button type="button" className="ws-zoom-btn" onClick={zoomIn} aria-label="Zooma in">+</button>
             <span className="ws-zoom-val">{zoom}%</span>
