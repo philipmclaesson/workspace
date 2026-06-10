@@ -344,7 +344,7 @@ const css = `
 
 .ws-sidebar {
   position: absolute;
-  top: 24px;
+  top: 48px;
   left: 24px;
   width: var(--side-w);
   z-index: 4;
@@ -497,7 +497,7 @@ const css = `
 .ws-node-e .ws-node-tag { color: var(--cream); border-color: var(--cream); }
 
 .ws-toolbar {
-  position: absolute; left: calc(24px + var(--side-w) + 24px); top: 24px;
+  position: absolute; left: calc(24px + var(--side-w) + 24px); top: 48px;
   display: flex; flex-direction: column; gap: 6px;
   padding: 8px 6px;
   background: var(--cream); border: 2px solid var(--ink); border-radius: 14px;
@@ -517,7 +517,7 @@ const css = `
 .ws-tool-sep { height: 1px; background: rgba(26,26,26,0.18); margin: 4px 4px; }
 
 .ws-zoom {
-  position: absolute; right: 24px; bottom: 24px;
+  position: absolute; right: 24px; bottom: 48px;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 10px 8px;
   background: var(--cream);
