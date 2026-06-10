@@ -220,6 +220,7 @@ function WorkspacePage() {
   const [sideCollapsed, setSideCollapsed] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [pdfOpenId, setPdfOpenId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
@@ -692,11 +693,26 @@ function WorkspacePage() {
                           <div className="ws-pdf-head">
                             <span className="ws-pdf-tag">PDF</span>
                             <span className="ws-pdf-name" title={it.name}>{it.name}</span>
-                            <a className="ws-pdf-open" href={it.dataUrl} target="_blank" rel="noreferrer" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>Öppna</a>
+                            <button
+                              type="button"
+                              className="ws-pdf-open"
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); setPdfOpenId(it.id); }}
+                            >Öppna</button>
                           </div>
-                          <object className="ws-pdf-frame" data={it.dataUrl} type="application/pdf" aria-label={it.name}>
-                            <div className="ws-pdf-fallback">Förhandsvisning ej tillgänglig</div>
-                          </object>
+                          <button
+                            type="button"
+                            className="ws-pdf-preview"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); setPdfOpenId(it.id); }}
+                            aria-label={`Öppna ${it.name}`}
+                          >
+                            <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                              <path d="M14 3v6h6"/>
+                            </svg>
+                            <span className="ws-pdf-preview-cta">Visa PDF</span>
+                          </button>
                         </>
                       ) : (
                         <label className="ws-pdf-drop" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
