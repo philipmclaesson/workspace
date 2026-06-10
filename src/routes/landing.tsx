@@ -84,6 +84,10 @@ const css = `
   --coral: #cc3a1e;
   --green: #226633;
   background: var(--cream);
+  background-image: url("${bgImage.url}");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: var(--ink);
   height: 100vh;
   width: 100%;
@@ -92,8 +96,25 @@ const css = `
   padding: 0 clamp(20px, 5vw, 64px);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 .lp-root * { box-sizing: border-box; }
+
+.lp-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.lp-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(245, 241, 232, 0.55);
+  z-index: 1;
+}
+.lp-header, .lp-hero { position: relative; z-index: 2; }
 
 .lp-header {
   display: flex;
