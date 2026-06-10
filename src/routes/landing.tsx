@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import favoLogo from "@/assets/favo-logo.png.asset.json";
-import bgImage from "@/assets/landing-bg.png.asset.json";
 import bgVideo from "@/assets/landing-bg.mp4.asset.json";
 
 export const Route = createFileRoute("/landing")({
@@ -30,7 +29,6 @@ function LandingPage() {
         muted
         loop
         playsInline
-        poster={bgImage.url}
       >
         <source src={bgVideo.url} type="video/mp4" />
       </video>
@@ -83,10 +81,6 @@ const css = `
   --coral: #cc3a1e;
   --green: #226633;
   background: var(--cream);
-  background-image: url("${bgImage.url}");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   color: var(--ink);
   height: 100vh;
   width: 100%;
