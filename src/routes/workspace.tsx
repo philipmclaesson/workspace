@@ -864,6 +864,13 @@ const css = `
   font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: 0.15em;
 }
 .ws-side-add:hover { background: var(--ink); color: var(--cream); }
+.ws-side-back {
+  width: 100%; padding: 8px 10px; margin-bottom: 12px;
+  border: 1px solid var(--ink); border-radius: 10px;
+  background: var(--cream); cursor: pointer; text-align: left;
+  font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--ink);
+}
+.ws-side-back:hover { background: var(--ink); color: var(--cream); }
 .ws-side-divider { height: 1px; background: rgba(26,26,26,0.18); margin: 16px 0; }
 .ws-side-notes-btn {
   width: 100%; padding: 8px 10px; border: 1px solid var(--ink); border-radius: 10px;
