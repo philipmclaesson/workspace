@@ -34,7 +34,6 @@ function LandingPage() {
       </header>
 
       <section className="lp-hero">
-        <span className="lp-eyebrow">March Madness 2026</span>
         <h1 className="lp-title">
           BUILD BETTER
           <br />
