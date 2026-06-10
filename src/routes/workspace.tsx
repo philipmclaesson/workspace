@@ -1719,7 +1719,7 @@ const css = `
   width: min(360px, 60vw);
 }
 .ws-search-icon {
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   display: grid; place-items: center;
   border: 2px solid var(--ink); border-radius: 14px;
   background: var(--cream); color: var(--ink); cursor: pointer;
