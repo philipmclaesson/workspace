@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as EkosystemRouteImport } from './routes/ekosystem'
+import { Route as BrandPositionRouteImport } from './routes/brand-position'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
@@ -30,6 +31,11 @@ const EkosystemRoute = EkosystemRouteImport.update({
   path: '/ekosystem',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BrandPositionRoute = BrandPositionRouteImport.update({
+  id: '/brand-position',
+  path: '/brand-position',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const ApiChatRoute = ApiChatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/brand-position': typeof BrandPositionRoute
   '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/brand-position': typeof BrandPositionRoute
   '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/brand-position': typeof BrandPositionRoute
   '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
   '/workspace': typeof WorkspaceRoute
@@ -65,14 +74,34 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ekosystem' | '/landing' | '/workspace' | '/api/chat'
+  fullPaths:
+    | '/'
+    | '/brand-position'
+    | '/ekosystem'
+    | '/landing'
+    | '/workspace'
+    | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ekosystem' | '/landing' | '/workspace' | '/api/chat'
-  id: '__root__' | '/' | '/ekosystem' | '/landing' | '/workspace' | '/api/chat'
+  to:
+    | '/'
+    | '/brand-position'
+    | '/ekosystem'
+    | '/landing'
+    | '/workspace'
+    | '/api/chat'
+  id:
+    | '__root__'
+    | '/'
+    | '/brand-position'
+    | '/ekosystem'
+    | '/landing'
+    | '/workspace'
+    | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrandPositionRoute: typeof BrandPositionRoute
   EkosystemRoute: typeof EkosystemRoute
   LandingRoute: typeof LandingRoute
   WorkspaceRoute: typeof WorkspaceRoute
@@ -102,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EkosystemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/brand-position': {
+      id: '/brand-position'
+      path: '/brand-position'
+      fullPath: '/brand-position'
+      preLoaderRoute: typeof BrandPositionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -121,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrandPositionRoute: BrandPositionRoute,
   EkosystemRoute: EkosystemRoute,
   LandingRoute: LandingRoute,
   WorkspaceRoute: WorkspaceRoute,
