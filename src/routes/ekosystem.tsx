@@ -212,7 +212,7 @@ const css = `
 }
 .ek-hero {
   position: absolute;
-  top: clamp(40px, 8vh, 96px);
+  top: calc(50% - 230px);
   left: clamp(24px, 5vw, 72px);
   max-width: 52%;
   display: flex;
