@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import favoLogo from "@/assets/favo-logo.png.asset.json";
+import favoLogo from "@/assets/favo-wordmark-green.png.asset.json";
 import bgVideo from "@/assets/landing-bg.mp4.asset.json";
 
 export const Route = createFileRoute("/landing")({

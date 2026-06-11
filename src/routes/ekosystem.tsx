@@ -116,7 +116,7 @@ function EkosystemPage() {
       <header className="ek-header">
         <a href="/landing" className="ek-logo" aria-label="FAVO">
           <img
-            src="/__l5e/assets-v1/ac7e7e14-74c2-45d0-91ec-e344a34cd64d/favo-logo.png"
+            src="/__l5e/assets-v1/592bf185-1cf0-4683-9f8b-f26fb63cc764/favo-wordmark-green.png"
             alt="FAVO"
             className="ek-logo-img"
           />

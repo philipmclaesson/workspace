@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import favoLogo from "@/assets/favo-logo.png.asset.json";
+import favoLogo from "@/assets/favo-wordmark-green.png.asset.json";
 
 /**
  * Site logo. Swap this single constant (or replace the asset JSON file
