@@ -125,6 +125,7 @@ function EkosystemPage() {
           <a href="/">Bracket</a>
           <a href="/workspace">Workspace</a>
           <a href="/ekosystem" className="ek-nav-active">Ekosystem</a>
+          <a href="/brand-position">Brand Radar</a>
           <a href="#login" className="ek-nav-login">Login</a>
         </nav>
       </header>
