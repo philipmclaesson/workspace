@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
+import { FavoFooter } from "@/components/FavoFooter";
 
 export const Route = createFileRoute("/ekosystem")({
   component: EkosystemPage,
@@ -147,6 +148,10 @@ function EkosystemPage() {
           <PuzzleCluster />
         </div>
       </div>
+
+      <div className="ek-footer-bleed">
+        <FavoFooter />
+      </div>
     </main>
   );
 }
@@ -193,10 +198,13 @@ const css = `
 .ek-canvas {
   position: relative;
   flex: 1;
-  min-height: 0;
+  min-height: calc(100vh - 120px);
   margin-bottom: 24px;
   overflow: hidden;
   background: var(--cream);
+}
+.ek-footer-bleed {
+  margin: 0 calc(clamp(20px, 4vw, 48px) * -1);
 }
 .ek-grid {
   position: absolute; inset: 0;
