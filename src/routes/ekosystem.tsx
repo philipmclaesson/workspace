@@ -130,6 +130,19 @@ function EkosystemPage() {
 
       <div className="ek-canvas">
         <div className="ek-grid" aria-hidden="true" />
+        <div className="ek-hero">
+          <h1 className="ek-title">
+            BUILD BETTER
+            <br />
+            <span className="accent">MARCH MADNESS</span>
+            <br />
+            PREDICTIONS
+          </h1>
+          <p className="ek-sub">
+            Create your perfect bracket, join groups with friends, and compete
+            for bracket supremacy!
+          </p>
+        </div>
         <div className="ek-puzzle-wrap">
           <PuzzleCluster />
         </div>
@@ -194,7 +207,34 @@ const css = `
 }
 .ek-puzzle-wrap {
   position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
+  top: 50%; right: clamp(24px, 6vw, 96px);
+  transform: translateY(-50%);
+}
+.ek-hero {
+  position: absolute;
+  top: clamp(40px, 8vh, 96px);
+  left: clamp(24px, 5vw, 72px);
+  max-width: 52%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2vh, 24px);
+}
+.ek-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(44px, 8vw, 120px);
+  line-height: 0.86;
+  letter-spacing: 0.005em;
+  margin: 0;
+  color: var(--ink);
+}
+.ek-title .accent { color: var(--coral); }
+.ek-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.5vw, 20px);
+  line-height: 1.4;
+  color: #3a3a3a;
+  max-width: 50ch;
+  margin: 0;
 }
 `;
