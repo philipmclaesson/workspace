@@ -216,6 +216,7 @@ function BrandPositionPage() {
           <a href="/workspace">Workspace</a>
           <a href="/ekosystem">Ekosystem</a>
           <a href="/brand-position" className="ws-nav-active">Brand Radar</a>
+          <a href="/paverkansmatrisen">Påverkansmatrisen</a>
           <a href="#login" className="ws-nav-login">Login</a>
         </nav>
       </header>

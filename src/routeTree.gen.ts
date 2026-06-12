@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspaceRouteImport } from './routes/workspace'
+import { Route as PaverkansmatrisenRouteImport } from './routes/paverkansmatrisen'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as EkosystemRouteImport } from './routes/ekosystem'
 import { Route as BrandPositionRouteImport } from './routes/brand-position'
@@ -19,6 +20,11 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: '/workspace',
   path: '/workspace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaverkansmatrisenRoute = PaverkansmatrisenRouteImport.update({
+  id: '/paverkansmatrisen',
+  path: '/paverkansmatrisen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LandingRoute = LandingRouteImport.update({
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/brand-position': typeof BrandPositionRoute
   '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
+  '/paverkansmatrisen': typeof PaverkansmatrisenRoute
   '/workspace': typeof WorkspaceRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/brand-position': typeof BrandPositionRoute
   '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
+  '/paverkansmatrisen': typeof PaverkansmatrisenRoute
   '/workspace': typeof WorkspaceRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/brand-position': typeof BrandPositionRoute
   '/ekosystem': typeof EkosystemRoute
   '/landing': typeof LandingRoute
+  '/paverkansmatrisen': typeof PaverkansmatrisenRoute
   '/workspace': typeof WorkspaceRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/brand-position'
     | '/ekosystem'
     | '/landing'
+    | '/paverkansmatrisen'
     | '/workspace'
     | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/brand-position'
     | '/ekosystem'
     | '/landing'
+    | '/paverkansmatrisen'
     | '/workspace'
     | '/api/chat'
   id:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/brand-position'
     | '/ekosystem'
     | '/landing'
+    | '/paverkansmatrisen'
     | '/workspace'
     | '/api/chat'
   fileRoutesById: FileRoutesById
@@ -104,6 +116,7 @@ export interface RootRouteChildren {
   BrandPositionRoute: typeof BrandPositionRoute
   EkosystemRoute: typeof EkosystemRoute
   LandingRoute: typeof LandingRoute
+  PaverkansmatrisenRoute: typeof PaverkansmatrisenRoute
   WorkspaceRoute: typeof WorkspaceRoute
   ApiChatRoute: typeof ApiChatRoute
 }
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/workspace'
       fullPath: '/workspace'
       preLoaderRoute: typeof WorkspaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paverkansmatrisen': {
+      id: '/paverkansmatrisen'
+      path: '/paverkansmatrisen'
+      fullPath: '/paverkansmatrisen'
+      preLoaderRoute: typeof PaverkansmatrisenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/landing': {
@@ -160,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrandPositionRoute: BrandPositionRoute,
   EkosystemRoute: EkosystemRoute,
   LandingRoute: LandingRoute,
+  PaverkansmatrisenRoute: PaverkansmatrisenRoute,
   WorkspaceRoute: WorkspaceRoute,
   ApiChatRoute: ApiChatRoute,
 }

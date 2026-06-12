@@ -126,6 +126,7 @@ function EkosystemPage() {
           <a href="/workspace">Workspace</a>
           <a href="/ekosystem" className="ek-nav-active">Ekosystem</a>
           <a href="/brand-position">Brand Radar</a>
+          <a href="/paverkansmatrisen">Påverkansmatrisen</a>
           <a href="#login" className="ek-nav-login">Login</a>
         </nav>
       </header>

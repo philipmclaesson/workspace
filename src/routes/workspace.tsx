@@ -683,6 +683,7 @@ function WorkspacePage() {
           <a href="/workspace" className="ws-nav-active">Workspace</a>
           <a href="/ekosystem">Ekosystem</a>
           <a href="/brand-position">Brand Radar</a>
+          <a href="/paverkansmatrisen">Påverkansmatrisen</a>
           <a href="#login" className="ws-nav-login">Login</a>
         </nav>
       </header>

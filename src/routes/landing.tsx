@@ -44,6 +44,7 @@ function LandingPage() {
           <a href="/workspace">Workspace</a>
           <a href="/ekosystem">Ekosystem</a>
           <a href="/brand-position">Brand Radar</a>
+          <a href="/paverkansmatrisen">Påverkansmatrisen</a>
           <a href="#login" className="lp-nav-login">Login</a>
         </nav>
       </header>
