@@ -382,7 +382,7 @@ const css = `
 .pm-badge-text { fill: var(--ink); font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; transition: fill 0.12s ease; }
 .pm-meta { font-family: 'Space Mono', monospace; font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; fill: var(--ink); opacity: 0.8; }
 .pm-tag { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; fill: var(--yellow); }
-.pm-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.03em; fill: var(--ink); }
+.pm-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.03em; fill: var(--coral); }
 .pm-word { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 21px; letter-spacing: 0.04em; text-transform: uppercase; fill: var(--green); }
 .pm-word-sm { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase; fill: var(--green); }
 .pm-ul { stroke: var(--green); stroke-width: 2.5; }
@@ -396,7 +396,7 @@ const css = `
 .pm-hit text { transition: fill 0.12s ease; }
 .pm-hit:hover .pm-word, .pm-hit.is-active .pm-word,
 .pm-hit:hover .pm-word-sm, .pm-hit.is-active .pm-word-sm,
-.pm-hit:hover .pm-title, .pm-hit.is-active .pm-title { fill: var(--coral); }
+.pm-hit:hover .pm-title, .pm-hit.is-active .pm-title { fill: var(--ink); }
 .pm-hit:hover .pm-badge-rect, .pm-hit.is-active .pm-badge-rect { fill: var(--coral); }
 .pm-hit:hover .pm-badge-text, .pm-hit.is-active .pm-badge-text { fill: var(--cream); }
 .pm-hit:hover .pm-stimuli, .pm-hit.is-active .pm-stimuli { fill: var(--ink); }
