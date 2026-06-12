@@ -381,7 +381,7 @@ const css = `
 .pm-badge-rect { fill: var(--yellow); stroke: var(--ink); stroke-width: 2.5; transition: fill 0.12s ease; }
 .pm-badge-text { fill: var(--ink); font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; transition: fill 0.12s ease; }
 .pm-meta { font-family: 'Space Mono', monospace; font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; fill: var(--ink); opacity: 0.8; }
-.pm-tag { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; fill: var(--yellow); }
+.pm-tag { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 19.5px; letter-spacing: 0.22em; text-transform: uppercase; fill: var(--yellow); }
 .pm-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.03em; fill: var(--coral); }
 .pm-word { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 21px; letter-spacing: 0.04em; text-transform: uppercase; fill: var(--green); }
 .pm-word-sm { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase; fill: var(--green); }
