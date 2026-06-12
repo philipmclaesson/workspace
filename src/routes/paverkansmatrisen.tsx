@@ -319,7 +319,7 @@ function PaverkansmatrisenPage() {
         </nav>
       </header>
 
-      <section className="pm-stage" aria-label="Påverkansmatrisen">
+      <section className="pm-stage bg-dot-grid" aria-label="Påverkansmatrisen">
         <svg ref={svgRef} viewBox="-7 44 1820 1016" className="pm-svg" role="img" aria-label="Påverkansmatrisen" />
       </section>
 
@@ -370,16 +370,14 @@ const css = `
 .pm-stage {
   flex: 1; min-height: 0;
   display: flex; align-items: center; justify-content: center;
-  background-image: radial-gradient(rgba(26,26,26,0.13) 1.5px, transparent 1.5px);
-  background-size: 26px 26px;
   border-radius: 14px;
   margin-bottom: 14px;
 }
 .pm-svg { width: 100%; height: 100%; }
 
 .pm-badge-shadow { fill: var(--ink); }
-.pm-badge-rect { fill: var(--yellow); stroke: var(--ink); stroke-width: 2.5; transition: fill 0.12s ease; }
-.pm-badge-text { fill: var(--ink); font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; transition: fill 0.12s ease; }
+.pm-badge-rect { fill: var(--yellow); stroke: var(--ink); stroke-width: 2.5; transition: fill 0.12s ease, transform 0.12s ease; }
+.pm-badge-text { fill: var(--ink); font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; transition: fill 0.12s ease, transform 0.12s ease; }
 .pm-meta { font-family: 'Space Mono', monospace; font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; fill: var(--ink); opacity: 0.8; }
 .pm-tag { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 19.5px; letter-spacing: 0.22em; text-transform: uppercase; fill: var(--yellow); }
 .pm-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.03em; fill: var(--coral); }
@@ -397,8 +395,8 @@ const css = `
 .pm-hit:hover .pm-word, .pm-hit.is-active .pm-word,
 .pm-hit:hover .pm-word-sm, .pm-hit.is-active .pm-word-sm,
 .pm-hit:hover .pm-title, .pm-hit.is-active .pm-title { fill: var(--ink); }
-.pm-hit:hover .pm-badge-rect, .pm-hit.is-active .pm-badge-rect { fill: var(--coral); }
-.pm-hit:hover .pm-badge-text, .pm-hit.is-active .pm-badge-text { fill: var(--cream); }
+.pm-hit:hover .pm-badge-rect, .pm-hit.is-active .pm-badge-rect,
+.pm-hit:hover .pm-badge-text, .pm-hit.is-active .pm-badge-text { transform: translate(-1px, -1px); }
 .pm-hit:hover .pm-stimuli, .pm-hit.is-active .pm-stimuli { fill: var(--ink); }
 
 .pm-panel {
@@ -414,7 +412,11 @@ const css = `
   transition: transform 0.22s ease, opacity 0.18s ease;
 }
 .pm-panel.is-open { transform: translateX(0); opacity: 1; pointer-events: auto; }
-@media (prefers-reduced-motion: reduce) { .pm-panel { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .pm-panel { transition: none; }
+  .pm-hit:hover .pm-badge-rect, .pm-hit.is-active .pm-badge-rect,
+  .pm-hit:hover .pm-badge-text, .pm-hit.is-active .pm-badge-text { transform: none; }
+}
 .pm-panel-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 18px 12px; border-bottom: 2px solid var(--ink); }
 .pm-panel-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--coral); }
 .pm-panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1; margin: 4px 0 0; letter-spacing: 0.02em; }

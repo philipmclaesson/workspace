@@ -132,7 +132,7 @@ function EkosystemPage() {
       </header>
 
       <div className="ek-canvas">
-        <div className="ek-grid" aria-hidden="true" />
+        <div className="ek-grid bg-dot-grid-strong" aria-hidden="true" />
         <div className="ek-hero">
           <h1 className="ek-title">
             BUILD BETTER
@@ -210,9 +210,6 @@ const css = `
 }
 .ek-grid {
   position: absolute; inset: 0;
-  background-image: radial-gradient(rgba(26,26,26,0.22) 1.2px, transparent 1.2px);
-  background-size: 22px 22px;
-  background-position: 0 0;
   pointer-events: none;
 }
 .ek-puzzle-wrap {

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 import favoLogo from "@/assets/favo-wordmark-green.png.asset.json";
 import bgVideo from "@/assets/landing-bg.mp4.asset.json";
 
@@ -62,9 +63,9 @@ function LandingPage() {
           for bracket supremacy!
         </p>
         <div className="lp-cta">
-          <button type="button" className="lp-btn lp-btn-primary">
+          <Button type="button" variant="cta">
             <BoltIcon /> SIGN UP
-          </button>
+          </Button>
         </div>
       </section>
     </main>
@@ -187,25 +188,6 @@ const css = `
   margin: 0;
 }
 .lp-cta { display: flex; gap: 16px; }
-.lp-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 18px;
-  padding: 16px 34px;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  cursor: pointer;
-  box-shadow: 5px 5px 0 var(--ink);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-.lp-btn:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--ink); }
-.lp-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
-.lp-btn-primary { background: #4ec07a; color: #0a2a14; }
 
 @media (max-width: 640px) {
   .lp-header { flex-direction: row; }

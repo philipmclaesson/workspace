@@ -126,7 +126,7 @@ function BrandCard({ tag, tagClass, title, side, demoScores, stroke }: {
         <span className={`bp-card-tag ${tagClass}`}>{tag}</span>
         <h2 className="bp-card-title">{live ? live.brand : title}</h2>
       </header>
-      <div className="bp-chart">
+      <div className="bp-chart bg-dot-grid">
         {side.loading ? (
           <div className="bp-loading" role="status">
             <span>Söker källor</span>
@@ -445,8 +445,6 @@ const css = `
 .bp-chart {
   flex: 1;
   margin: 6px -6px 4px;
-  background-image: radial-gradient(rgba(26,26,26,0.07) 1.2px, transparent 1.2px);
-  background-size: 22px 22px;
   border-radius: 10px;
   min-height: 280px;
   display: flex; align-items: center; justify-content: center;
