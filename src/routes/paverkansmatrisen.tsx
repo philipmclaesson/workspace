@@ -15,15 +15,15 @@ export const Route = createFileRoute("/paverkansmatrisen")({
 type CellDef = { row: string; col: string; tag: string; title: string; cx: number; ty: number; items: string[] };
 
 const CELLS: Record<string, CellDef> = {
-  r1c1: { row: "Utvärderaren", col: "Intresse", tag: "Stimulerande", title: "Bearbetning",   cx: 460,  ty: 176, items: ["Bearbetning", "Interaktion"] },
-  r1c2: { row: "Utvärderaren", col: "Minne",    tag: "Anledningar",  title: "Resonemang",    cx: 950,  ty: 176, items: ["Förståelse", "Acceptans", "Emotionell bias", "Normer", "Självbiografi", "Jämförelse", "Kunskap"] },
-  r1c3: { row: "Utvärderaren", col: "Beteende", tag: "Värde",        title: "Utvärdering",   cx: 1480, ty: 176, items: ["Utvärdering", "Infosök", "Intention"] },
-  r2c1: { row: "Snabbtänkaren", col: "Intresse", tag: "Nyskapande",  title: "Uppmärksamhet", cx: 460,  ty: 481, items: ["Uppmärksamhet"] },
-  r2c2: { row: "Snabbtänkaren", col: "Minne",    tag: "Distinkt",    title: "Kännedom",      cx: 950,  ty: 481, items: ["Framing", "Antaganden", "Kännedom", "Problem & lösning", "Kategorisering"] },
-  r2c3: { row: "Snabbtänkaren", col: "Beteende", tag: "Underlätta",  title: "Val",           cx: 1480, ty: 481, items: ["Urval", "Problem", "Tumregler", "Köp"] },
-  r3c1: { row: "Känslomänniskan", col: "Intresse", tag: "Karaktär",    title: "Intuition",  cx: 460,  ty: 773, items: ["Perception", "Konceptualisering"] },
-  r3c2: { row: "Känslomänniskan", col: "Minne",    tag: "Känslor",     title: "Motivation", cx: 950,  ty: 773, items: ["Emotionell reaktion", "Relationer", "Social status", "Självuppfattning", "Associationer"] },
-  r3c3: { row: "Känslomänniskan", col: "Beteende", tag: "Drivkrafter", title: "Begär",      cx: 1480, ty: 773, items: ["Gillande", "Familjaritet", "Behov", "Känslosök"] },
+  r1c1: { row: "Utvärderaren", col: "Intresse", tag: "Stimulerande", title: "Bearbetning",   cx: 460,  ty: 182, items: ["Bearbetning", "Interaktion"] },
+  r1c2: { row: "Utvärderaren", col: "Minne",    tag: "Anledningar",  title: "Resonemang",    cx: 950,  ty: 182, items: ["Förståelse", "Acceptans", "Emotionell bias", "Normer", "Självbiografi", "Jämförelse", "Kunskap"] },
+  r1c3: { row: "Utvärderaren", col: "Beteende", tag: "Värde",        title: "Utvärdering",   cx: 1480, ty: 182, items: ["Utvärdering", "Infosök", "Intention"] },
+  r2c1: { row: "Snabbtänkaren", col: "Intresse", tag: "Nyskapande",  title: "Uppmärksamhet", cx: 460,  ty: 487, items: ["Uppmärksamhet"] },
+  r2c2: { row: "Snabbtänkaren", col: "Minne",    tag: "Distinkt",    title: "Kännedom",      cx: 950,  ty: 487, items: ["Framing", "Antaganden", "Kännedom", "Problem & lösning", "Kategorisering"] },
+  r2c3: { row: "Snabbtänkaren", col: "Beteende", tag: "Underlätta",  title: "Val",           cx: 1480, ty: 487, items: ["Urval", "Problem", "Tumregler", "Köp"] },
+  r3c1: { row: "Känslomänniskan", col: "Intresse", tag: "Karaktär",    title: "Intuition",  cx: 460,  ty: 779, items: ["Perception", "Konceptualisering"] },
+  r3c2: { row: "Känslomänniskan", col: "Minne",    tag: "Känslor",     title: "Motivation", cx: 950,  ty: 779, items: ["Emotionell reaktion", "Relationer", "Social status", "Självuppfattning", "Associationer"] },
+  r3c3: { row: "Känslomänniskan", col: "Beteende", tag: "Drivkrafter", title: "Begär",      cx: 1480, ty: 779, items: ["Gillande", "Familjaritet", "Behov", "Känslosök"] },
 };
 const CELL_RECTS = [
   { id: "r1c1", x: 260, y: 156 }, { id: "r1c2", x: 710, y: 156 }, { id: "r1c3", x: 1240, y: 156 },
