@@ -251,6 +251,7 @@ function PaverkansmatrisenPage() {
 
     // Stimuli
     const stim = el("g", {});
+    stim.appendChild(el("polygon", { points: "190,928 318,928 336,950 318,972 190,972 208,950", transform: "translate(3.5 3.5)" }, "pm-stimuli-shadow"));
     stim.appendChild(el("polygon", { points: "190,928 318,928 336,950 318,972 190,972 208,950" }, "pm-stimuli"));
     const stimT = el("text", { x: 254, y: 958, "text-anchor": "middle" }, "pm-stimuli-text");
     stimT.textContent = "Stimuli"; stim.appendChild(stimT);
@@ -387,7 +388,8 @@ const css = `
 .pm-ul { stroke: var(--green); stroke-width: 2.5; }
 .pm-line { stroke: var(--ink); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .pm-marker { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; fill: var(--ink); opacity: 0.75; }
-.pm-stimuli { fill: var(--coral); transition: fill 0.12s ease; }
+.pm-stimuli { fill: var(--coral); stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; transition: fill 0.12s ease; }
+.pm-stimuli-shadow { fill: var(--ink); }
 .pm-stimuli-text { fill: var(--cream); font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.08em; }
 
 .pm-hit { cursor: pointer; outline: none; }
